@@ -41,6 +41,10 @@ public:
     TriangleModel(const std::vector<std::shared_ptr<Triangle>>& triangles) : triangles_(triangles) {};
     TriangleModel() {};
     void addTriangle(std::shared_ptr<Triangle> triangle);
+    const std::vector<std::shared_ptr<Triangle>>& getTriangles() const {
+        return triangles_;
+    }
+
     ~TriangleModel() {};
 };
 

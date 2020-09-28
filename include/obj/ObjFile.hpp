@@ -26,9 +26,9 @@ class ObjFile {
         std::vector<std::shared_ptr<VertexNormal>> vn_;
         std::vector<std::shared_ptr<Surface>> s_;
 
-        void addSimpleTriangle(trim::TriangleModel tm, const Surface& s);
-        void add2Triangle(trim::TriangleModel tm, const Surface& s);
-        void addMultiTriangle(trim::TriangleModel tm, const Surface& s);
+        void addSimpleTriangle(trim::TriangleModel &tm, const Surface& s);
+        void add2Triangle(trim::TriangleModel &tm, const Surface& s);
+        void addMultiTriangle(trim::TriangleModel &tm, const Surface& s);
     public:
         ObjFile(const char* fileName);
         void parse();

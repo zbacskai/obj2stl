@@ -45,7 +45,7 @@ namespace obj {
         }
     }
 
-    void ObjFile::addSimpleTriangle(trim::TriangleModel tm, const Surface& s) {
+    void ObjFile::addSimpleTriangle(trim::TriangleModel &tm, const Surface& s) {
         int vnRef = s.getVnRefs()[0];
         std::shared_ptr<VertexNormal> vn = vn_[vnRef];
         std::shared_ptr<trim::Triangle> t = 
@@ -62,7 +62,7 @@ namespace obj {
         tm.addTriangle(t);
     }
 
-    void ObjFile::add2Triangle(trim::TriangleModel tm, const Surface& s) {
+    void ObjFile::add2Triangle(trim::TriangleModel &tm, const Surface& s) {
         int vnRef = s.getVnRefs()[0];
         
         std::shared_ptr<trim::Triangle> t1 = 
@@ -93,7 +93,7 @@ namespace obj {
         tm.addTriangle(t2);
     }
         
-    void ObjFile::addMultiTriangle(trim::TriangleModel tm, const Surface& s) {
+    void ObjFile::addMultiTriangle(trim::TriangleModel &tm, const Surface& s) {
         float total = 0;
         float sumX = 0;  
         float sumY = 0;  
