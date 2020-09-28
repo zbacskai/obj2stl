@@ -92,14 +92,23 @@ const std::vector<int>& Surface::getVnRefs() const {
 void Surface::makeRefsAbsolute(int vCount, int tvCount, int vnCount) {
     for (unsigned int i = 0; i < vRefs_.size(); ++i)
     {
-        if (vRefs_[i] < 0)
+        if (vRefs_[i] < 0 and vCount > 0)
             vRefs_[i] += vCount;
 
-        if (tvRefs_[i] < 0)
+        if (tvRefs_[i] < 0 and tvCount > 0)
             tvRefs_[i] += tvCount;
 
-        if (vnRefs_[i] < 0)
+        if (vnRefs_[i] < 0 and vnCount > 0)
             vnRefs_[i] += vnCount;
+
+        if (vRefs_[i] > 0)
+            vRefs_[i]-=1;
+
+        if (tvRefs_[i] > 0)
+            tvRefs_[i]-=1;
+
+        if (vnRefs_[i] > 0)
+            vnRefs_[i]-=1;
     }
 }
 
@@ -118,6 +127,12 @@ std::istream &operator>>( std::istream  &input, Surface &s )
     for (auto beg = tok.begin(); beg != tok.end() and metIndex<3; ++beg, ++metIndex)
         if (*beg != "")
             out_val[metIndex] = std::atoi((*beg).c_str());
+    if (out_val[0] > 0)
+    {
+        s.vRefs_.push_back(out_val[0]);
+        s.tvRefs_.push_back(out_val[1]);
+        s.vnRefs_.push_back(out_val[2]);
+    }
   }
   return input;
 }

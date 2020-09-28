@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <vector>
 
+#include<TriangleModel.hpp>
+
 namespace obj {
 
 class GeometricVertex {
@@ -33,6 +35,10 @@ class GeometricVertex {
                       << z_ << ","
                       << w_ << std::endl;
         }
+
+        trim::Vertex getVertex() const {
+            return {x_, y_, z_};
+        }
 };
 
 class TextureVertex {
@@ -57,6 +63,10 @@ class TextureVertex {
                       << j_ << ","
                       << k_ << std::endl;
         }
+
+        trim::Vertex getVertex() const {
+            return {i_, j_, k_};
+        }
 };
 
 class VertexNormal {
@@ -80,6 +90,10 @@ class VertexNormal {
                       << u_ << ","
                       << v_ << ","
                       << w_ << std::endl;
+        }
+
+        trim::Vertex getVertex() const {
+            return {u_, v_, w_};
         }
 };
 
