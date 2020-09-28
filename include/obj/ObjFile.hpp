@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 
-#include<TriangleModel.hpp>
+#include<FileReaderInterface.hpp>
 
 namespace obj {
 
@@ -15,7 +15,7 @@ class TextureVertex;
 class VertexNormal;
 class Surface;
 
-class ObjFile {
+class ObjFile : public meshconvert::FileReaderInterface {
     private:
         std::string fileName_;
         int vCount_;
@@ -31,8 +31,9 @@ class ObjFile {
         void addMultiTriangle(trim::TriangleModel &tm, const Surface& s);
     public:
         ObjFile(const char* fileName);
-        void parse();
-        trim::TriangleModel& convertToTriangleModel(trim::TriangleModel &tm);
+        virtual void parse();
+        virtual trim::TriangleModel& convertToTriangleModel(trim::TriangleModel &tm);
+        virtual ~ObjFile() {};
 };
 
 }

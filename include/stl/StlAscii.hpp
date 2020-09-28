@@ -2,15 +2,20 @@
 #ifndef StlAscii_hpp
 #define StlAscii_hpp
 
-#include<TriangleModel.hpp>
+#include <FileWriterInterface.hpp>
+#include <string>
 
 namespace stl {
 namespace ascii {
     
-class StlAscii
+class StlAscii : public meshconvert::FileWriterInterface
 {
+    private:
+        std::string fileName_;
     public:
-        static void write_stdout(const trim::TriangleModel &tm);
+        StlAscii(const char* fileName);
+        virtual void write(const trim::TriangleModel &tm);
+        virtual ~StlAscii() {};
 };
 
 } // end of namespace ascii

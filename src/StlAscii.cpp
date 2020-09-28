@@ -1,33 +1,44 @@
 #include <stl/StlAscii.hpp>
 
 #include<iostream>
+#include <fstream>
+#include <iomanip>
+
 namespace stl {
 namespace ascii {
-    
-void StlAscii::write_stdout(const trim::TriangleModel &tm) {
-    std::cout << "solid test " << std::endl;
-    std::cout.precision(6);
-    std::cout << std::scientific;
+
+StlAscii::StlAscii(const char* fileName) : meshconvert::FileWriterInterface(fileName), fileName_(fileName) {
+
+}
+
+void StlAscii::write(const trim::TriangleModel &tm) {
+    std::ofstream ofile;
+    ofile.open (fileName_);
+  
+    ofile << "solid test " << std::endl;
+    ofile << std::setprecision(6);
+    ofile << std::scientific;
 
     for (auto triangle : tm.getTriangles())
     {
-        std::cout << "facet normal ";
-        std::cout << triangle->getNormalVector().p[0] << " ";
-        std::cout << triangle->getNormalVector().p[1] << " ";
-        std::cout << triangle->getNormalVector().p[2] << std::endl;
+        ofile << "facet normal ";
+        ofile << triangle->getNormalVector().p[0] << " ";
+        ofile << triangle->getNormalVector().p[1] << " ";
+        ofile << triangle->getNormalVector().p[2] << std::endl;
 
-        std::cout << "    outer loop" << std::endl;
+        ofile << "    outer loop" << std::endl;
         for (int i = 0; i < 3; ++i)
         {
-            std::cout << "        vertex ";
-            std::cout << triangle->operator[](i).p[0] << " ";
-            std::cout << triangle->operator[](i).p[1] << " ";
-            std::cout << triangle->operator[](i).p[2] << std::endl;
+            ofile << "        vertex ";
+            ofile << triangle->operator[](i).p[0] << " ";
+            ofile << triangle->operator[](i).p[1] << " ";
+            ofile << triangle->operator[](i).p[2] << std::endl;
 
         }
-        std::cout << "    endloop" << std::endl;
-        std::cout << "endfacet" << std::endl;
+        ofile << "    endloop" << std::endl;
+        ofile << "endfacet" << std::endl;
     }
+    ofile.close();
 }
 
 

@@ -6,7 +6,7 @@
 
 namespace obj {
 
-    ObjFile::ObjFile(const char* fileName) : fileName_(fileName), vCount_(0), vtCount_(0), vnCount_(0) {}
+    ObjFile::ObjFile(const char* fileName) : fileName_(fileName), vCount_(0), vtCount_(0), vnCount_(0), FileReaderInterface(fileName) {}
 
     void ObjFile::parse() {       
         std::ifstream infile(fileName_);
