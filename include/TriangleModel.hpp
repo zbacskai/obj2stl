@@ -28,6 +28,11 @@ class Triangle {
             normalVectorSet_ = true;
         }
 
+        void setVertex(int index, const Vertex& v)
+        {
+            vertex_[index] = v;
+        }
+
         void calculateNormalVector() {
 
         }

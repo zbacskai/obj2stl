@@ -9,6 +9,7 @@
 #include <memory>
 #include <FileReaderInterface.hpp>
 #include <FileWriterInterface.hpp>
+#include <ModelConverter.hpp>
 
 namespace po = boost::program_options;
 
@@ -36,6 +37,7 @@ class FileFactory {
 };
 
 int main(int argc, char* argv[]) {
+    std::string transformationOptions = "";
     po::positional_options_description opts;
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -43,12 +45,19 @@ int main(int argc, char* argv[]) {
             ("iff", "only obj supported at the moment")
             ("if", "path to the input file")
             ("off", "stl-ascii or stl-bin supported")
-            ("of", "output-file name");
+            ("of", "output-file name")
+            ("transformations", po::value<std::string>(&transformationOptions),
+                                "transformations in given order separated by space\n"
+                                "possible options scale=2/rot=-23.1,2.1,0.0/translate=1.2,3.1,0.0 \n"
+                                "where the transformtion order can be pased in any order and the \n"
+                                "numbers represent x,y,z rotations and x,y,z translations")
+            ;
 
     opts.add("iff", 1);
     opts.add("if", 1);
     opts.add("off", 1);
     opts.add("of", 1);
+    opts.add("transformations", 1);
     
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(desc).positional(opts).run(), vm);
@@ -77,6 +86,11 @@ int main(int argc, char* argv[]) {
         trim::TriangleModel tm;
         fr->parse();
         fr->convertToTriangleModel(tm);
+        if (transformationOptions != "")
+        {
+            mc::ModelConverter mc(transformationOptions);
+            mc.convert(tm);
+        }
         fw->write(tm);
     }
     catch (std::string& e) {
