@@ -7,29 +7,6 @@
 
 #include <arpa/inet.h>
 
-namespace {
-#pragma pack(push, 1)
-
-struct fheader { 
-  uint8_t data[80];
-  uint32_t num_of_triangles;
-};
-
-union real32 {
-    float f;
-    uint32_t wo;
-};
-
-struct triangle_info {
-    real32 normal[3];
-    real32 v[3][3];
-    uint16_t attr_byte_count;
-};
-
-#pragma pack(pop)
-
-} // end of unnamed namespace
-
 namespace stl {
 namespace ascii {
 
@@ -41,30 +18,28 @@ void StlAscii::write(const trim::TriangleModel &tm) {
     std::ofstream ofile;
     ofile.open (fileName_);
   
-    fheader f;
-    std::strcpy(reinterpret_cast<char*>(&f.data[0]), "binary stl by bacsek");
-    f.num_of_triangles = tm.getTriangles().size();
-    f.num_of_triangles = htonl(f.num_of_triangles);
-    ofile.write(reinterpret_cast<char*>(&f), sizeof(fheader));
+    ofile << "solid test " << std::endl;
+    ofile << std::setprecision(6);
+    ofile << std::scientific;
 
     for (auto triangle : tm.getTriangles())
     {
-        triangle_info ti;
+        ofile << "facet normal ";
+        ofile << triangle->getNormalVector().p[0] << " ";
+        ofile << triangle->getNormalVector().p[1] << " ";
+        ofile << triangle->getNormalVector().p[2] << std::endl;
+
+        ofile << "    outer loop" << std::endl;
         for (int i = 0; i < 3; ++i)
         {
-            ti.normal[i].f = triangle->getNormalVector().p[i];
-            ti.normal[i].wo = htonl(ti.normal[i].wo);
+            ofile << "        vertex ";
+            ofile << triangle->operator[](i).p[0] << " ";
+            ofile << triangle->operator[](i).p[1] << " ";
+            ofile << triangle->operator[](i).p[2] << std::endl;
+
         }
-
-        for (int j = 0; j < 3; ++j)
-            for (int i = 0; i < 3; ++i)
-            {
-                ti.v[j][i].f = triangle->operator[](j).p[i];
-                ti.v[j][i].wo = htonl(ti.v[j][i].wo);
-            }
-
-        ti.attr_byte_count = 0;
-        ofile.write(reinterpret_cast<char*>(&ti), sizeof(triangle_info));
+        ofile << "    endloop" << std::endl;
+        ofile << "endfacet" << std::endl;
     }
     ofile.close();
 }
