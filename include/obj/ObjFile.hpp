@@ -28,6 +28,7 @@ class ObjFile : public meshconvert::FileReaderInterface {
 
         void addSimpleTriangle(trim::TriangleModel &tm, const Surface& s);
         void add2Triangle(trim::TriangleModel &tm, const Surface& s);
+        trim::Vertex calculateMedian(const Surface& s);
         void addMultiTriangle(trim::TriangleModel &tm, const Surface& s);
     public:
         ObjFile(const char* fileName);

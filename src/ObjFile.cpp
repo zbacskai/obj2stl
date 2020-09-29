@@ -6,7 +6,11 @@
 
 namespace obj {
 
-    ObjFile::ObjFile(const char* fileName) : fileName_(fileName), vCount_(0), vtCount_(0), vnCount_(0), FileReaderInterface(fileName) {}
+    ObjFile::ObjFile(const char* fileName) : 
+        fileName_(fileName), 
+            vCount_(0), 
+            vtCount_(0), 
+            vnCount_(0), FileReaderInterface(fileName) {}
 
     void ObjFile::parse() {       
         std::ifstream infile(fileName_);
@@ -50,12 +54,12 @@ namespace obj {
         std::shared_ptr<VertexNormal> vn = vn_[vnRef];
         std::shared_ptr<trim::Triangle> t = 
                 std::make_shared<trim::Triangle>(
-                    v_[s.getVRefs()[0]]->getVertex(),
-                    v_[s.getVRefs()[1]]->getVertex(),
-                    v_[s.getVRefs()[2]]->getVertex());
+                    *v_[s.getVRefs()[0]],
+                    *v_[s.getVRefs()[1]],
+                    *v_[s.getVRefs()[2]]);
 
         if (vnRef > 0)
-            t->setNormalVector(vn->getVertex());
+            t->setNormalVector(*vn);
         else
             t->calculateNormalVector();
         
@@ -67,21 +71,21 @@ namespace obj {
         
         std::shared_ptr<trim::Triangle> t1 = 
                 std::make_shared<trim::Triangle>(
-                    v_[s.getVRefs()[0]]->getVertex(),
-                    v_[s.getVRefs()[1]]->getVertex(),
-                    v_[s.getVRefs()[2]]->getVertex());
+                    *v_[s.getVRefs()[0]],
+                    *v_[s.getVRefs()[1]],
+                    *v_[s.getVRefs()[2]]);
 
         std::shared_ptr<trim::Triangle> t2 = 
                 std::make_shared<trim::Triangle>(
-                    v_[s.getVRefs()[2]]->getVertex(),
-                    v_[s.getVRefs()[3]]->getVertex(),
-                    v_[s.getVRefs()[0]]->getVertex());
+                    *v_[s.getVRefs()[2]],
+                    *v_[s.getVRefs()[3]],
+                    *v_[s.getVRefs()[0]]);
 
         if (vnRef > 0)
         {
             std::shared_ptr<VertexNormal> vn = vn_[vnRef];
-            t1->setNormalVector(vn->getVertex());
-            t2->setNormalVector(vn->getVertex());
+            t1->setNormalVector(*vn);
+            t2->setNormalVector(*vn);
         }
         else
         {
@@ -92,8 +96,9 @@ namespace obj {
         tm.addTriangle(t1);
         tm.addTriangle(t2);
     }
-        
-    void ObjFile::addMultiTriangle(trim::TriangleModel &tm, const Surface& s) {
+    
+    trim::Vertex ObjFile::calculateMedian(const Surface& s)
+    {
         float total = 0;
         float sumX = 0;  
         float sumY = 0;  
@@ -102,11 +107,17 @@ namespace obj {
         {
             auto gvert = v_[vert];
             total+=1.0;
-            sumX += gvert->getX();
-            sumY += gvert->getY();
-            sumZ += gvert->getZ();
+            const trim::Vertex &v = *gvert;
+            sumX += v[0];
+            sumY += v[1];
+            sumZ += v[2];
         }
-        trim::Vertex median = {sumX/total, sumY/total, sumZ/total};
+        return {sumX/total, sumY/total, sumZ/total};
+    }
+
+    void ObjFile::addMultiTriangle(trim::TriangleModel &tm, const Surface& s) {
+        trim::Vertex median = calculateMedian(s);
+
         int vnRef = s.getVnRefs()[0];
         bool calculateNormalVector = not (vnRef > 0);
         std::shared_ptr<VertexNormal> vn = (not calculateNormalVector ? vn_[vnRef] : 0);
@@ -115,14 +126,14 @@ namespace obj {
         {
             std::shared_ptr<trim::Triangle> t = 
                 std::make_shared<trim::Triangle>(
-                    v_[s.getVRefs()[prev]]->getVertex(),
-                    v_[s.getVRefs()[curr]]->getVertex(),
+                    *v_[s.getVRefs()[prev]],
+                    *v_[s.getVRefs()[curr]],
                     median);
             
             if (calculateNormalVector)
                 t->calculateNormalVector();
             else
-                t->setNormalVector(vn->getVertex());
+                t->setNormalVector(*vn);
 
             tm.addTriangle(t);
         }
@@ -141,10 +152,13 @@ namespace obj {
                 addMultiTriangle(tm, *surface);
             else
             {
-                std::cout << "Something wrong. Can't consturct surface from. " << numberOfVerticles << std::endl;
+                std::stringstream ss;
+                 ss << "Something wrong. Can't consturct urface from. " << 
+                 numberOfVerticles;
+                 throw ss.str();
             }
             
         }
         return tm;
     }
-}
+} //end of namespace obj

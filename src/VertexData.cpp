@@ -9,71 +9,29 @@
 
 namespace obj {
     
-const float GeometricVertex::getX() const {
-    return x_;
-}
-
-const float GeometricVertex::getY() const {
-    return y_;
-}
-
-const float GeometricVertex::getZ() const {
-    return z_;
-}
-
-const float GeometricVertex::getW() const {
-    return w_;
-}
-
 std::istream& operator>>( std::istream  &input, GeometricVertex &v )
 {
+    input >> v.v_.p[0];
+    input >> v.v_.p[1];
+    input >> v.v_.p[2];
     v.w_ = 1.0;
-    input >> v.x_;
-    input >> v.y_;
-    input >> v.z_;
     input >> v.w_;
-
     return input;
-}
-
-const float TextureVertex::getI() const {
-    return i_;
-}
-
-const float TextureVertex::getJ() const {
-    return j_;
-}
-
-const float TextureVertex::getK() const {
-    return k_;
 }
 
 std::istream& operator>>( std::istream  &input, TextureVertex &v )
 {
-    input >> v.i_;
-    input >> v.j_;
-    input >> v.k_;
-
+    input >> v.v_.p[0];
+    input >> v.v_.p[1];
+    input >> v.v_.p[2];
     return input;
-}
-
-const float VertexNormal::getU() const {
-    return u_;
-}
-
-const float VertexNormal::getV() const {
-    return v_;
-}
-
-const float VertexNormal::getW() const {
-    return w_;
 }
 
 std::istream& operator>>( std::istream  &input, VertexNormal &v )
 {
-    input >> v.u_;
-    input >> v.v_;
-    input >> v.w_;
+    input >> v.v_.p[0];
+    input >> v.v_.p[1];
+    input >> v.v_.p[2];
 
     return input;
 }
