@@ -7,6 +7,7 @@
 #include <memory>
 #include <sstream>
 #include <iostream>
+#include <cmath>
 
 namespace mc {
     class ConversionBase {
@@ -46,6 +47,50 @@ namespace mc {
         };
 
     };
+
+    class Rotate : public ConversionBase {      
+    private:
+        static const float pi;
+    public:
+        Rotate(float tx, float ty, float tz)  {
+            // Rotate Z axis
+            float cosThetaZ = cos(tz*pi/180.0);
+            float sinThetaZ = sin(tz*pi/180.0);
+            m_ << cosThetaZ, sinThetaZ, 0.0, 0.0,
+                  -1.0 * sinThetaZ, cosThetaZ, 0.0, 0.0,
+                  0.0, 0.0, 1.0, 0.0,
+                  0.0, 0.0, 0.0, 1.0;
+
+            // Rotate Y axis
+            Eigen::Matrix4f rotY;
+            float cosThetaY = cos(ty*pi/180.0);
+            float sinThetaY = sin(ty*pi/180.0);
+            rotY << -1.0 * sinThetaY, cosThetaY, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    cosThetaY, sinThetaY, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0;
+
+            m_ = m_ * rotY;
+
+            // Rotate X axis
+            Eigen::Matrix4f rotX;
+            float cosThetaX = cos(tx*pi/180.0);
+            float sinThetaX = sin(tx*pi/180.0);
+            rotX << 0.0, 0.0, 1.0, 0.0,
+                    cosThetaX, sinThetaX, 0.0, 0.0,
+                    -1.0 * sinThetaX, cosThetaX, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0;
+
+            m_ = m_ * rotX;
+        };
+        ~Rotate() {};
+        virtual Eigen::Matrix4f& getMatrix() {
+            return m_;
+        };
+
+    };
+
+    const float Rotate::pi = 3.14159265;
 }
 
 namespace {
@@ -75,6 +120,8 @@ namespace {
                 conversionStack.push_back(std::make_shared<mc::Scale>(pl[0], pl[1], pl[2]));
             else if (cdesc_list[0] == "translation")
                 conversionStack.push_back(std::make_shared<mc::Translation>(pl[0], pl[1], pl[2]));
+            else if (cdesc_list[0] == "rotate")
+                conversionStack.push_back(std::make_shared<mc::Rotate>(pl[0], pl[1], pl[2]));
 
         }
     }
