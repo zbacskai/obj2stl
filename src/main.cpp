@@ -92,7 +92,8 @@ int main(int argc, char* argv[]) {
             mc::ModelConverter mc(transformationOptions);
             mc.convert(tm);
         }
-        chp::CheckPoint c(0.5,0.5, 0.5);
+        //chp::CheckPoint c(0.5,0.5, 0.5);
+        chp::CheckPoint c(-1.5,0.5, 0.5);
         c.isInModel(tm);
         fw->write(tm);
     }
