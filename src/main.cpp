@@ -3,6 +3,7 @@
 #include <obj/ObjFile.hpp>
 #include <TriangleModel.hpp>
 #include <stl/StlAscii.hpp>
+#include <stl/StlBin.hpp>
 
 #include <boost/program_options.hpp>
 #include <memory>
@@ -27,6 +28,8 @@ class FileFactory {
         {
             if (iFormat == "stl-ascii")
                 return std::make_shared<stl::ascii::StlAscii>(iFileName.c_str());
+            else if (iFormat == "stl-bin")
+                return std::make_shared<stl::bin::StlBin>(iFileName.c_str());
             else
                 throw std::string("Supported output file formats: stl-ascii");
         }
