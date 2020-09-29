@@ -15,8 +15,36 @@ namespace {
         pZ
     };
 
+    void addPointToPoly(const Eigen::Vector3f& point,
+                        std::vector<Coordinates> &projectedPoly,
+                        planeType plT,
+                        const trim::Vertex& minP,
+                        const trim::Vertex& maxP)
+    {
+        switch (plT)
+        {
+        case pX:
+            if (point(1) >= minP.p[1] and point(1) <= maxP.p[1] and
+                point(2) >= minP.p[2] and point(2) <= maxP.p[2])
+                projectedPoly.push_back({point(1), point(2)});
+            break;
+        case pY:
+            if (point(0) >= minP.p[0] and point(0) <= maxP.p[0] and
+                point(2) >= minP.p[2] and point(2) <= maxP.p[2])
+                projectedPoly.push_back({point(0), point(2)});
+            break;
+        case pZ:
+            if (point(0) >= minP.p[0] and point(0) <= maxP.p[0] and
+                point(1) >= minP.p[1] and point(1) <= maxP.p[1])
+            projectedPoly.push_back({point(0), point(1)});
+            break;
+        default:
+            break;
+        }
+    }
+
     void calculateCrossSection(std::vector<std::shared_ptr<trim::Triangle>> projectTriangle,
-                               std::vector<Coordinates> projectedPoly,
+                               std::vector<Coordinates> &projectedPoly,
                                const Eigen::Matrix3f& plane,
                                planeType plT)
     {
@@ -40,6 +68,9 @@ namespace {
             float detAC = p01xp02 * (iac * -1.0);
             float detBC = p01xp02 * (ibc * -1.0);
 
+            trim::Vertex minP = triangle->getMin();
+            trim::Vertex maxP = triangle->getMin();
+
             std::cout << "Det " << detAB << " " << detAC << " " << detBC << std::endl;
             if (detAB != 0.0)
             {
@@ -47,6 +78,7 @@ namespace {
                 t/=detAB;
                 Eigen::Vector3f point = ia + (iab*t);
                 std::cout << "[ "  << point.transpose() << " ] " << plT << std::endl;
+                addPointToPoly(point, projectedPoly, plT, minP, maxP);
             }
 
             if (detAC != 0.0)
@@ -55,6 +87,7 @@ namespace {
                 t/=detAC;
                 Eigen::Vector3f point = ia + (iac*t);
                 std::cout << "[ " << point.transpose() << " ] " << plT <<  std::endl;
+                addPointToPoly(point, projectedPoly, plT, minP, maxP);
             }
 
             if (detBC != 0.0)
@@ -63,9 +96,15 @@ namespace {
                 t/=detBC;
                 Eigen::Vector3f point = ib + (ibc*t);
                 std::cout << "[ " << point.transpose() <<  " ] " << plT <<  std::endl;
+                addPointToPoly(point, projectedPoly, plT, minP, maxP);
             }
         }
 
+    }
+
+    bool checkPointInPoly(float x, float y, std::vector<Coordinates> &projectedPoly)
+    {
+        return false;
     }
 }
 
@@ -129,26 +168,28 @@ bool CheckPoint::isInModel(const trim::TriangleModel& tm)
 
     std::vector<Coordinates> projectedPolyX;
     Eigen::Matrix3f planeX;
-    planeX << x, 0.0, 0.0,
-              x, 1.0, 0.0,
-              x, 0.0, 1.0;
+    planeX << x, x, x,
+              0.0, 1.0, 0.0,
+              0.0, 0.0, 1.0;
     calculateCrossSection(crossSectX, projectedPolyX, planeX, pX);
 
     std::vector<Coordinates> projectedPolyY;
     Eigen::Matrix3f planeY;
-    planeX << 0.0, y, 0.0,
-              1.0, y, 0.0,
-              0.0, y, 1.0;
+    planeY << 0.0, 1.0, 0.0,
+                y,   y,   y,
+              0.0, 0.0, 1.0;
     calculateCrossSection(crossSectY, projectedPolyY, planeY, pY);
 
     std::vector<Coordinates> projectedPolyZ;
     Eigen::Matrix3f planeZ;
-    planeZ << 0.0, 0.0, z,
-              1.0, 0.0, z,
-              0.0, 1.0, z;
+    planeZ << 0.0, 1.0, 0.0,
+              0.0, 0.0, 1.0,
+                z,   z,   z;
     calculateCrossSection(crossSectZ, projectedPolyZ, planeZ, pZ);
 
-    return false;
+    return checkPointInPoly(x, y, projectedPolyZ) and
+           checkPointInPoly(x, z, projectedPolyY) and
+           checkPointInPoly(y, z, projectedPolyX);
 }
 
 }
