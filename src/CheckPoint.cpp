@@ -3,6 +3,16 @@
 
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
+#include <set>
+
+#include <list>
+
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+
 
 namespace {
     struct Coordinates {
@@ -24,18 +34,12 @@ namespace {
         switch (plT)
         {
         case pX:
-            if (point(1) >= minP.p[1] and point(1) <= maxP.p[1] and
-                point(2) >= minP.p[2] and point(2) <= maxP.p[2])
-                projectedPoly.push_back({point(1), point(2)});
+            projectedPoly.push_back({point(1), point(2)});
             break;
         case pY:
-            if (point(0) >= minP.p[0] and point(0) <= maxP.p[0] and
-                point(2) >= minP.p[2] and point(2) <= maxP.p[2])
-                projectedPoly.push_back({point(0), point(2)});
+            projectedPoly.push_back({point(0), point(2)});
             break;
         case pZ:
-            if (point(0) >= minP.p[0] and point(0) <= maxP.p[0] and
-                point(1) >= minP.p[1] and point(1) <= maxP.p[1])
             projectedPoly.push_back({point(0), point(1)});
             break;
         default:
@@ -102,9 +106,52 @@ namespace {
 
     }
 
+    std::string constructPointStr(float x, float y) {
+        std::stringstream ss;
+        ss << std::setprecision(6);
+        ss << std::fixed;
+        ss << x << " " << y;
+        return ss.str();
+    }
+
     bool checkPointInPoly(float x, float y, std::vector<Coordinates> &projectedPoly)
     {
-        return false;
+        std::set<std::string> points;
+        for (auto c : projectedPoly) {
+            std::string ps = constructPointStr(c.p[0], c.p[1]);
+            points.insert(ps);
+        }
+
+        std::stringstream poly_str;
+
+        poly_str << "POLYGON((";
+        bool first = true;
+        for (auto p : points)
+        {
+            if (not first)
+                poly_str << ",";
+
+            poly_str << p;
+            first = false;
+        }
+        poly_str << "))";
+
+        std::string test_str = poly_str.str();
+
+        std::cout << test_str << std::endl;
+
+        typedef boost::geometry::model::d2::point_xy<double> point_type;
+        typedef boost::geometry::model::polygon<point_type> polygon_type;
+
+        polygon_type poly;
+        boost::geometry::read_wkt(test_str, poly);
+        
+        point_type p(x, y);
+
+        std::cout << x << "---" << y << std::endl;
+
+        std::cout << "within: " << (boost::geometry::within(p, poly) ? "yes" : "no") << std::endl;
+        return boost::geometry::within(p, poly);
     }
 }
 
