@@ -13,6 +13,9 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#include <cmath>
+
+#define PI 3.14159265
 
 namespace {
     struct Coordinates {
@@ -133,12 +136,29 @@ namespace {
         return ss.str();
     }
 
+    struct Cmp{
+        bool operator ()(const Coordinates &a, const Coordinates &b)
+        {
+            double curr = std::atan2(a.p[0],a.p[1]) * 180.0 / PI;
+            double othr = std::atan2(b.p[0],b.p[1]) * 180.0 / PI;
+
+            return (curr < othr);
+            #if 0
+                return true;
+
+            if ((curr == othr) and (a.p[0] < b.p[0]))
+                return true;
+
+            return ((curr == othr) and (a.p[0] == b.p[0]) and (a.p[1] < b.p[1]));
+            #endif
+        }
+    };
+
     bool checkPointInPoly(float x, float y, std::vector<Coordinates> &projectedPoly)
     {
-        std::set<std::string> points;
+        std::set<Coordinates, Cmp> points;
         for (auto c : projectedPoly) {
-            std::string ps = constructPointStr(c.p[0], c.p[1]);
-            points.insert(ps);
+            points.insert(c);
         }
 
         std::stringstream poly_str;
@@ -150,7 +170,7 @@ namespace {
             if (not first)
                 poly_str << ",";
 
-            poly_str << p;
+            poly_str << constructPointStr(p.p[0], p.p[1]);
             first = false;
         }
         poly_str << "))";
@@ -253,9 +273,9 @@ bool CheckPoint::isInModel(const trim::TriangleModel& tm)
                 z,   z,   z;
     calculateCrossSection(crossSectZ, projectedPolyZ, planeZ, pZ);
 
-    return checkPointInPoly(x, y, projectedPolyZ) and
-           checkPointInPoly(x, z, projectedPolyY) and
-           checkPointInPoly(y, z, projectedPolyX);
+    return checkPointInPoly(x, z, projectedPolyY) and
+           checkPointInPoly(y, z, projectedPolyX) and
+           checkPointInPoly(x, y, projectedPolyZ);
 }
 
 }
