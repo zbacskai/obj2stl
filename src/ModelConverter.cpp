@@ -10,27 +10,31 @@
 #include <cmath>
 
 namespace mc {
-    class ConversionBase {
-    protected:
-        Eigen::Matrix4f m_; 
-    public:
-        virtual Eigen::Matrix4f& getMatrix() = 0;
-        virtual ~ConversionBase() {};
+
+    class ConversionBase 
+    {
+        protected:
+            Eigen::Matrix4f m_; 
+        public:
+            virtual Eigen::Matrix4f& getMatrix() = 0;
+            virtual ~ConversionBase() {};
     };
 
-    class Scale : public ConversionBase {      
-    public:
-        Scale(float kx, float ky, float kz)  {
-            m_ <<  kx, 0.0, 0.0, 0.0,
-                  0.0,  ky, 0.0, 0.0,
-                  0.0, 0.0,  kz, 0.0,
-                  0.0, 0.0, 0.0, 1.0;
-        };
-        ~Scale() {};
-        virtual Eigen::Matrix4f& getMatrix() {
-            return m_;
-        };
+    typedef  std::vector<std::shared_ptr<mc::ConversionBase>> ConversionBaseVector;
 
+    class Scale : public ConversionBase 
+    {      
+        public:
+            Scale(float kx, float ky, float kz)  {
+                m_ <<  kx, 0.0, 0.0, 0.0,
+                      0.0,  ky, 0.0, 0.0,
+                      0.0, 0.0,  kz, 0.0,
+                    0.0, 0.0, 0.0, 1.0;
+            };
+            ~Scale() {};
+            virtual Eigen::Matrix4f& getMatrix() {
+                return m_;
+            };
     };
 
     class Translation : public ConversionBase {      
@@ -91,38 +95,46 @@ namespace mc {
     };
 
     const float Rotate::pi = 3.14159265;
-}
+} // end of namespace mc
 
 namespace {
 
-    void buildConversionStack(const std::string conversionParameters,
-                              std::vector<std::shared_ptr<mc::ConversionBase>> &conversionStack)
+    void createConversionMatrix(const std::string& conversionType,
+                                const std::string& paramStr,
+                                mc::ConversionBaseVector &conversionStack)
+    {
+        trim::Vertex v;
+        v.setFromStr(paramStr);
+                        
+        if (conversionType == "scale")
+            conversionStack.push_back(std::make_shared<mc::Scale>(v[0], v[1], v[2]));
+        else if (conversionType == "translation")
+            conversionStack.push_back(std::make_shared<mc::Translation>(v[0], v[1], v[2]));
+        else if (conversionType == "rotate")
+            conversionStack.push_back(std::make_shared<mc::Rotate>(v[0], v[1], v[2]));
+        else
+        {
+            std::stringstream ss;
+            ss << "Invalid conversion method: " << conversionType;
+            throw ss.str();
+        }
+    }
+
+    void buildConversionStack(const std::string& conversionParameters,
+                              mc::ConversionBaseVector &conversionStack)
     {
         std::stringstream inputfs(conversionParameters);
         std::string convstr;
         while (std::getline(inputfs, convstr, '/'))
         {
-            std::stringstream conversion_desc(convstr);
-            std::string c_desc;
-            std::vector<std::string> cdesc_list;
+            std::stringstream conversionDesc(convstr);
+            std::string cDesc;
+            std::vector<std::string> cDescList;
 
-            while(std::getline(conversion_desc, c_desc, '='))
-                cdesc_list.push_back(c_desc);
+            while(std::getline(conversionDesc, cDesc, '='))
+                cDescList.push_back(cDesc);
 
-            std::stringstream param_desc(cdesc_list[1]);
-            std::string param;
-            std::vector<float> pl;
-
-            while(std::getline(param_desc, param, ','))
-                pl.push_back(std::atof(param.c_str()));
-            
-            if (cdesc_list[0] == "scale")
-                conversionStack.push_back(std::make_shared<mc::Scale>(pl[0], pl[1], pl[2]));
-            else if (cdesc_list[0] == "translation")
-                conversionStack.push_back(std::make_shared<mc::Translation>(pl[0], pl[1], pl[2]));
-            else if (cdesc_list[0] == "rotate")
-                conversionStack.push_back(std::make_shared<mc::Rotate>(pl[0], pl[1], pl[2]));
-
+            createConversionMatrix(cDescList[0], cDescList[1], conversionStack);
         }
     }
 }
@@ -130,14 +142,15 @@ namespace {
 namespace mc {
 
 
-ModelConverter::ModelConverter(const std::string& conversionParameters) : conversionParameters_(conversionParameters)
+ModelConverter::ModelConverter(const std::string& conversionParameters) : 
+                        conversionParameters_(conversionParameters)
 {
 
 }
     
 void ModelConverter::convert(trim::TriangleModel tm)
 {
-    std::vector<std::shared_ptr<ConversionBase>> conversionStack;
+    mc::ConversionBaseVector conversionStack;
     buildConversionStack(conversionParameters_, conversionStack);
 
     Eigen::Matrix4f cv = conversionStack[0]->getMatrix();
@@ -146,31 +159,16 @@ void ModelConverter::convert(trim::TriangleModel tm)
 
     for (auto triangle : tm.getTriangles())
     {
-        Eigen::RowVector4f normalVec;
-        normalVec << triangle->getNormalVector().p[0],
-                     triangle->getNormalVector().p[1],
-                     triangle->getNormalVector().p[2],
-                     1.0;
-
-        normalVec = normalVec * cv;
-        triangle->setNormalVector({normalVec(0),
-                                   normalVec(1),
-                                   normalVec(2)});
-
-        for(unsigned int i = 0; i < 3; ++i)
+        for(unsigned int i = 0; i < 4; ++i)
         {
-            Eigen::RowVector4f vertexVec;
-            vertexVec << triangle->operator[](i).p[0],
-                     triangle->operator[](i).p[1],
-                     triangle->operator[](i).p[2],
-                     1.0;
-
+            // index 3 is the normal vector
+            const trim::Triangle& tr = *triangle;
+            Eigen::RowVector4f vertexVec = tr[i];           
             vertexVec = vertexVec * cv;
-            triangle->setVertex(i, {vertexVec(0), vertexVec(1), vertexVec(2)});
-    
+            triangle->setVertex(i, 
+                {vertexVec(0), vertexVec(1), vertexVec(2)});
         }
     }
-
 }
 
 ModelConverter::~ModelConverter()

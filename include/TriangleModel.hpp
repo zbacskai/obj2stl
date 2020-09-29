@@ -17,6 +17,12 @@ struct Vertex {
         return v;
     }
 
+    operator Eigen::RowVector4f() const {
+        Eigen::RowVector4f v;
+        v << p[0], p[1], p[2], 1.0;
+        return v;
+    }
+
     void setFromStr(const std::string& iStr)
     {
         std::stringstream param_desc(iStr);
@@ -35,8 +41,8 @@ struct Vertex {
 
 class Triangle {
     private:
-        Vertex vertex_[3];
-        Vertex normalVector_;
+        Vertex vertex_[4];
+        Vertex& normalVector_;
         bool normalVectorSet_;
         bool minCalculated_;
         bool maxCalculated_;
@@ -46,8 +52,8 @@ class Triangle {
         const Vertex& operator[](int i) const { return vertex_[i]; };
         const Vertex& getNormalVector() const { return normalVector_; };
 
-        Triangle(const Vertex &a, const Vertex &b, const Vertex &c) :
-            vertex_({a, b, c}), normalVector_({0.0, 0.0, 0.0}), normalVectorSet_(false) ,
+        Triangle(const Vertex &a, const Vertex &b, const Vertex &c, const Vertex &n = {0.0, 0.0, 0.0}) :
+            vertex_({a, b, c, n}), normalVector_(vertex_[3]), normalVectorSet_(false) ,
             minCalculated_(false), maxCalculated_(false), min_({0.0, 0.0, 0.0}), max_({0.0, 0.0, 0.0 }){};
 
         void setNormalVector(const Vertex& n) {
@@ -59,7 +65,10 @@ class Triangle {
 
         void setVertex(int index, const Vertex& v)
         {
-            vertex_[index] = v;
+            if (index == 3)
+                setNormalVector(v);
+            else
+                vertex_[index] = v; 
         }
 
         void calculateNormalVector() {
