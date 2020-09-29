@@ -100,14 +100,12 @@ namespace obj {
         float sumZ = 0;   
         for (auto vert : s.getVRefs())
         {
-            std::cout << vert << ",";
             auto gvert = v_[vert];
             total+=1.0;
             sumX += gvert->getX();
             sumY += gvert->getY();
             sumZ += gvert->getZ();
         }
-        std::cout << std::endl;
         trim::Vertex median = {sumX/total, sumY/total, sumZ/total};
         int vnRef = s.getVnRefs()[0];
         bool calculateNormalVector = not (vnRef > 0);

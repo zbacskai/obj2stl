@@ -4,7 +4,6 @@
 #include <iterator> 
 #include <regex>
 
-#include <boost/tokenizer.hpp>
 #include <string>
 #include <iostream>
 
@@ -115,18 +114,20 @@ void Surface::makeRefsAbsolute(int vCount, int tvCount, int vnCount) {
 
 std::istream &operator>>( std::istream  &input, Surface &s )
 {
-  typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   std::string vertexRef;
   while (std::getline(input, vertexRef, ' '))
   {
-    boost::char_separator<char> sep{"/"};
-    tokenizer tok{vertexRef, sep};
+    std::stringstream ss(vertexRef);
+    std::string tok;
 
     int metIndex=0;
     int out_val[3] = {0,0,0};
-    for (auto beg = tok.begin(); beg != tok.end() and metIndex<3; ++beg, ++metIndex)
-        if (*beg != "")
-            out_val[metIndex] = std::atoi((*beg).c_str());
+    while (std::getline(ss, tok, '/') and metIndex <3) {
+        if (tok != "")
+            out_val[metIndex] = std::atoi((tok).c_str());    
+        ++metIndex;
+    }
+
     if (out_val[0] > 0)
     {
         s.vRefs_.push_back(out_val[0]);
