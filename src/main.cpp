@@ -10,6 +10,7 @@
 #include <FileReaderInterface.hpp>
 #include <FileWriterInterface.hpp>
 #include <ModelConverter.hpp>
+#include <CheckPoint.hpp>
 
 namespace po = boost::program_options;
 
@@ -91,6 +92,8 @@ int main(int argc, char* argv[]) {
             mc::ModelConverter mc(transformationOptions);
             mc.convert(tm);
         }
+        chp::CheckPoint c(-5.90947,3.74890, 3.15100);
+        c.isInModel(tm);
         fw->write(tm);
     }
     catch (std::string& e) {
