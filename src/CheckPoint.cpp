@@ -31,20 +31,39 @@ namespace {
                         const trim::Vertex& minP,
                         const trim::Vertex& maxP)
     {
+        float x, y, minX, maxX, minY, maxY;
         switch (plT)
         {
         case pX:
-            projectedPoly.push_back({point(1), point(2)});
+            x = point(1);
+            y = point(2);
+            minX = minP.p[1];
+            maxX = maxP.p[1];
+            minY = minP.p[2];
+            maxY = maxP.p[2];
             break;
         case pY:
-            projectedPoly.push_back({point(0), point(2)});
+            x = point(0);
+            y = point(2);    
+            minX = minP.p[0];
+            maxX = maxP.p[0];
+            minY = minP.p[2];
+            maxY = maxP.p[2];    
             break;
         case pZ:
-            projectedPoly.push_back({point(0), point(1)});
+            x = point(0);
+            y = point(1);
+            minX = minP.p[0];
+            maxX = maxP.p[0];
+            minY = minP.p[1];
+            maxY = maxP.p[1];
             break;
         default:
             break;
         }
+
+        if (minX <= x and x <= maxX and minY <= y and y <= maxY)
+           projectedPoly.push_back({x, y}); 
     }
 
     void calculateCrossSection(std::vector<std::shared_ptr<trim::Triangle>> projectTriangle,
@@ -73,7 +92,7 @@ namespace {
             float detBC = p01xp02 * (ibc * -1.0);
 
             trim::Vertex minP = triangle->getMin();
-            trim::Vertex maxP = triangle->getMin();
+            trim::Vertex maxP = triangle->getMax();
 
             std::cout << "Det " << detAB << " " << detAC << " " << detBC << std::endl;
             if (detAB != 0.0)
