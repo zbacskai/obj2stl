@@ -12,18 +12,18 @@ namespace obj {
 
 class GeometricVertex {
     private:
-        double x_;
-        double y_;
-        double z_;
-        double w_;
+        float x_;
+        float y_;
+        float z_;
+        float w_;
     public:
-        GeometricVertex(double x, double y, double z, double w) : x_(x), y_(y), z_(z), w_(w) {}
+        GeometricVertex(float x, float y, float z, float w) : x_(x), y_(y), z_(z), w_(w) {}
         GeometricVertex() : GeometricVertex(0.0, 0.0, 0.0, 1.0) {}
 
-        const double getX() const;
-        const double getY() const;
-        const double getZ() const;
-        const double getW() const;
+        const float getX() const;
+        const float getY() const;
+        const float getZ() const;
+        const float getW() const;
 
         friend std::istream &operator>>( std::istream  &input, GeometricVertex &v ); 
         void debug() {
@@ -43,16 +43,16 @@ class GeometricVertex {
 
 class TextureVertex {
     private:
-        double i_;
-        double j_;
-        double k_;
+        float i_;
+        float j_;
+        float k_;
     public:
-        TextureVertex(double i, double j, double k) :  i_(i), j_(j), k_(k) {}
+        TextureVertex(float i, float j, float k) :  i_(i), j_(j), k_(k) {}
         TextureVertex() : TextureVertex(0.0, 0.0, 0.0) {}
 
-        const double getI() const;
-        const double getJ() const;
-        const double getK() const;
+        const float getI() const;
+        const float getJ() const;
+        const float getK() const;
 
         friend std::istream &operator>>( std::istream  &input, TextureVertex &v ); 
         void debug() {
@@ -71,16 +71,16 @@ class TextureVertex {
 
 class VertexNormal {
     private:
-        double u_;
-        double v_;
-        double w_;
+        float u_;
+        float v_;
+        float w_;
     public:
-        VertexNormal(double u, double v, double w) :  u_(u), v_(v), w_(w) {}
+        VertexNormal(float u, float v, float w) :  u_(u), v_(v), w_(w) {}
         VertexNormal() : VertexNormal(0.0, 0.0, 0.0) {}
 
-        const double getU() const;
-        const double getV() const;
-        const double getW() const;
+        const float getU() const;
+        const float getV() const;
+        const float getW() const;
 
         friend std::istream &operator>>( std::istream  &input, VertexNormal &v ); 
         void debug() {

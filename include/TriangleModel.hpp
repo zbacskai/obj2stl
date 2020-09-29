@@ -8,7 +8,7 @@
 namespace trim {
 
 struct Vertex {
-    double p[3];
+    float p[3];
 };
 
 class Triangle {

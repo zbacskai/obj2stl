@@ -10,19 +10,19 @@
 
 namespace obj {
     
-const double GeometricVertex::getX() const {
+const float GeometricVertex::getX() const {
     return x_;
 }
 
-const double GeometricVertex::getY() const {
+const float GeometricVertex::getY() const {
     return y_;
 }
 
-const double GeometricVertex::getZ() const {
+const float GeometricVertex::getZ() const {
     return z_;
 }
 
-const double GeometricVertex::getW() const {
+const float GeometricVertex::getW() const {
     return w_;
 }
 
@@ -37,15 +37,15 @@ std::istream& operator>>( std::istream  &input, GeometricVertex &v )
     return input;
 }
 
-const double TextureVertex::getI() const {
+const float TextureVertex::getI() const {
     return i_;
 }
 
-const double TextureVertex::getJ() const {
+const float TextureVertex::getJ() const {
     return j_;
 }
 
-const double TextureVertex::getK() const {
+const float TextureVertex::getK() const {
     return k_;
 }
 
@@ -58,15 +58,15 @@ std::istream& operator>>( std::istream  &input, TextureVertex &v )
     return input;
 }
 
-const double VertexNormal::getU() const {
+const float VertexNormal::getU() const {
     return u_;
 }
 
-const double VertexNormal::getV() const {
+const float VertexNormal::getV() const {
     return v_;
 }
 
-const double VertexNormal::getW() const {
+const float VertexNormal::getW() const {
     return w_;
 }
 
