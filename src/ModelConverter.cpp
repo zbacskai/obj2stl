@@ -19,13 +19,28 @@ namespace mc {
 
     class Scale : public ConversionBase {      
     public:
-        Scale(float k)  {
-            m_ <<   k, 0.0, 0.0, 0.0,
-                  0.0,   k, 0.0, 0.0,
-                  0.0, 0.0,   k, 0.0,
+        Scale(float kx, float ky, float kz)  {
+            m_ <<  kx, 0.0, 0.0, 0.0,
+                  0.0,  ky, 0.0, 0.0,
+                  0.0, 0.0,  kz, 0.0,
                   0.0, 0.0, 0.0, 1.0;
         };
         ~Scale() {};
+        virtual Eigen::Matrix4f& getMatrix() {
+            return m_;
+        };
+
+    };
+
+    class Translation : public ConversionBase {      
+    public:
+        Translation(float dx, float dy, float dz)  {
+            m_ << 1.0, 0.0, 0.0, 0.0,
+                  0.0, 1.0, 0.0, 0.0,
+                  0.0, 0.0, 1.0, 0.0,
+                   dx,  dy,  dz, 1.0;
+        };
+        ~Translation() {};
         virtual Eigen::Matrix4f& getMatrix() {
             return m_;
         };
@@ -48,12 +63,19 @@ namespace {
 
             while(std::getline(conversion_desc, c_desc, '='))
                 cdesc_list.push_back(c_desc);
+
+            std::stringstream param_desc(cdesc_list[1]);
+            std::string param;
+            std::vector<float> pl;
+
+            while(std::getline(param_desc, param, ','))
+                pl.push_back(std::atof(param.c_str()));
             
             if (cdesc_list[0] == "scale")
-            {
-                float k = std::atof(cdesc_list[1].c_str());
-                conversionStack.push_back(std::make_shared<mc::Scale>(k));
-            }
+                conversionStack.push_back(std::make_shared<mc::Scale>(pl[0], pl[1], pl[2]));
+            else if (cdesc_list[0] == "translation")
+                conversionStack.push_back(std::make_shared<mc::Translation>(pl[0], pl[1], pl[2]));
+
         }
     }
 }
