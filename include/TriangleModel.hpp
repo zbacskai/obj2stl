@@ -16,6 +16,21 @@ struct Vertex {
         v << p[0], p[1] , p[2];
         return v;
     }
+
+    void setFromStr(const std::string& iStr)
+    {
+        std::stringstream param_desc(iStr);
+        std::string param;
+        std::vector<float> pl;
+
+        for (unsigned i = 0; std::getline(param_desc, param, ',') and (i < 3); ++i)
+            p[i] = std::atof(param.c_str());
+    }
+
+    float operator[](int index) const
+    {
+        return p[index];
+    }
 };
 
 class Triangle {

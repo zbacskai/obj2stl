@@ -39,6 +39,7 @@ class FileFactory {
 
 int main(int argc, char* argv[]) {
     std::string transformationOptions = "";
+    std::string pointInside = "";
     po::positional_options_description opts;
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -48,10 +49,12 @@ int main(int argc, char* argv[]) {
             ("off", "stl-ascii or stl-bin supported")
             ("of", "output-file name")
             ("transformations", po::value<std::string>(&transformationOptions),
-                                "transformations in given order separated by space\n"
-                                "possible options scale=2/rot=-23.1,2.1,0.0/translate=1.2,3.1,0.0 \n"
+                                "transformations in given order separated by /\n"
+                                "possible options scale=2,1,0/rotate=-23.1,2.1,0.0/translation=1.2,3.1,0.0 \n"
                                 "where the transformtion order can be pased in any order and the \n"
                                 "numbers represent x,y,z rotations and x,y,z translations")
+            ("point_in_model", po::value<std::string>(&pointInside),
+                                "Check if given point is inside of object")
             ;
 
     opts.add("iff", 1);
@@ -92,12 +95,15 @@ int main(int argc, char* argv[]) {
             mc::ModelConverter mc(transformationOptions);
             mc.convert(tm);
         }
-        //chp::CheckPoint c(0.5,0.5, 0.5);
-        //chp::CheckPoint c(-1.5,0.5, 0.5);
-        //chp::CheckPoint c(-1.5,-2.0, 0.5);
-        chp::CheckPoint c(0,0, 0);
-        c.isInModel(tm);
-        fw->write(tm);
+        if (pointInside != "")
+        {
+            trim::Vertex v;
+            v.setFromStr(pointInside);
+            chp::CheckPoint c(v[0],v[1], v[2]);
+            c.isInModel(tm);
+        }
+        else
+            fw->write(tm);
     }
     catch (std::string& e) {
         std::cout << e << std::endl;
