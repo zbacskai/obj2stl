@@ -4,161 +4,129 @@
 #include <sstream>
 #include <fstream>
 
+#include<TriangleModel.hpp>
+
 namespace obj {
 
-    ObjFile::ObjFile(const char* fileName) : 
-        fileName_(fileName), 
-            vCount_(0), 
-            vtCount_(0), 
-            vnCount_(0), FileReaderInterface(fileName) {}
-
-    void ObjFile::parse() {       
-        std::ifstream infile(fileName_);
-        std::string line;
-        while (std::getline(infile, line))
-        {
-            std::istringstream iss(line);
-            std::string info_type;
-            iss >> info_type;
-
-            if (info_type == "v")
-            {
-                std::shared_ptr<GeometricVertex> v = std::make_shared<GeometricVertex>();
-                iss >> *v;
-                vCount_++;
-                v_.push_back(v);
-            } else if (info_type == "vt")
-            {
-                std::shared_ptr<TextureVertex> vt = std::make_shared<TextureVertex>();
-                iss >> *vt;
-                vtCount_++;
-                vt_.push_back(vt);
-            } else if (info_type == "vn")
-            {
-                std::shared_ptr<VertexNormal> vn = std::make_shared<VertexNormal>();
-                iss >> *vn;
-                vnCount_++;
-                vn_.push_back(vn);
-            } else if (info_type == "f")
-            {
-                std::shared_ptr<Surface> s = std::make_shared<Surface>();
-                iss >> *s;
-                s->makeRefsAbsolute(vCount_, vtCount_, vnCount_);
-                s_.push_back(s);
-            }
-        }
-    }
-
-    void ObjFile::addSimpleTriangle(trim::TriangleModel &tm, const Surface& s) {
-        int vnRef = s.getVnRefs()[0];
-        std::shared_ptr<VertexNormal> vn = vn_[vnRef];
-        std::shared_ptr<trim::Triangle> t = 
-                std::make_shared<trim::Triangle>(
-                    *v_[s.getVRefs()[0]],
-                    *v_[s.getVRefs()[1]],
-                    *v_[s.getVRefs()[2]]);
-
-        if (vnRef > 0)
-            t->setNormalVector(*vn);
-        else
-            t->calculateNormalVector();
+    ObjFile::ObjFile(const char* fileName, trim::TriangleModel& tm) : 
+        FileReaderInterface(fileName, tm),
+        _fileName(fileName), 
+        _tm(tm),
+        _vCount(0), _vtCount(0), _vnCount(0) 
         
-        tm.addTriangle(t);
-    }
+    {
 
-    void ObjFile::add2Triangle(trim::TriangleModel &tm, const Surface& s) {
-        int vnRef = s.getVnRefs()[0];
-        
-        std::shared_ptr<trim::Triangle> t1 = 
-                std::make_shared<trim::Triangle>(
-                    *v_[s.getVRefs()[0]],
-                    *v_[s.getVRefs()[1]],
-                    *v_[s.getVRefs()[2]]);
-
-        std::shared_ptr<trim::Triangle> t2 = 
-                std::make_shared<trim::Triangle>(
-                    *v_[s.getVRefs()[2]],
-                    *v_[s.getVRefs()[3]],
-                    *v_[s.getVRefs()[0]]);
-
-        if (vnRef > 0)
-        {
-            std::shared_ptr<VertexNormal> vn = vn_[vnRef];
-            t1->setNormalVector(*vn);
-            t2->setNormalVector(*vn);
-        }
-        else
-        {
-            t1->calculateNormalVector();
-            t2->calculateNormalVector();
-        }
-        
-        tm.addTriangle(t1);
-        tm.addTriangle(t2);
     }
     
-    trim::Vertex ObjFile::calculateMedian(const Surface& s)
+    Eigen::RowVector4f ObjFile::calculateMedian(const trim::TriangleModel::ModelMatrix& m,
+                                 const std::vector<int>& refs) const
     {
         float total = 0;
         float sumX = 0;  
         float sumY = 0;  
         float sumZ = 0;   
-        for (auto vert : s.getVRefs())
+        for (auto r : refs)
         {
-            auto gvert = v_[vert];
             total+=1.0;
-            const trim::Vertex &v = *gvert;
-            sumX += v[0];
-            sumY += v[1];
-            sumZ += v[2];
+            sumX += m(r,0);
+            sumY += m(r,1);
+            sumZ += m(r,2);
         }
-        return {sumX/total, sumY/total, sumZ/total};
+        Eigen::RowVector4f row;
+        row << sumX/total, sumY/total, sumZ/total, 1.0;
+
+        return row;
     }
 
-    void ObjFile::addMultiTriangle(trim::TriangleModel &tm, const Surface& s) {
-        trim::Vertex median = calculateMedian(s);
 
-        int vnRef = s.getVnRefs()[0];
-        bool calculateNormalVector = not (vnRef > 0);
-        std::shared_ptr<VertexNormal> vn = (not calculateNormalVector ? vn_[vnRef] : 0);
+    void ObjFile::addMultiTriangle(const Surface& surface) {
+        std::cout << "Multi Triangle" << std::endl;
+        int medianVertex = _tm.addVertex(calculateMedian(_tm.getVerticleMatrix(), surface.getVRefs()));
+        int medianTexture = _tm.addTexture(calculateMedian(_tm.getTextureMatrix(), surface.getTvRefs()));
+        int medianNormal = _tm.addNormalVector(calculateMedian(_tm.getNormalMatrix(), surface.getVnRefs()));
+
+        Eigen::Vector3i median;
+        median << medianVertex , medianTexture , medianNormal;
         int prev = 0;
-        for (int curr = 1; curr < s.getVRefs().size(); ++curr, ++prev)
-        {
-            std::shared_ptr<trim::Triangle> t = 
-                std::make_shared<trim::Triangle>(
-                    *v_[s.getVRefs()[prev]],
-                    *v_[s.getVRefs()[curr]],
-                    median);
-            
-            if (calculateNormalVector)
-                t->calculateNormalVector();
-            else
-                t->setNormalVector(*vn);
-
-            tm.addTriangle(t);
-        }
+        for (int curr = 1; curr < surface.getVRefs().size(); ++curr, ++prev)
+            addSimpleTriangle(surface, &median, prev, curr, 0);
     }
 
-    trim::TriangleModel& ObjFile::convertToTriangleModel(trim::TriangleModel &tm)
+
+    void ObjFile::add2Triangles(const Surface& surface) {
+        addSimpleTriangle(surface, 0, 0, 1, 2);
+        addSimpleTriangle(surface, 0, 2, 3, 0);
+    }
+
+    void ObjFile::addSimpleTriangle(const Surface& surface,
+                                    Eigen::Vector3i* cpoint,
+                                    int a, int b, int c) {
+        trim::TriangleData verticles(
+            surface.getVRefs()[a],
+            surface.getVRefs()[b], 
+            cpoint == 0 ? surface.getVRefs()[c] : (*cpoint)(0));
+        
+        trim::TriangleData textures(
+            surface.getTvRefs()[a],
+            surface.getTvRefs()[b], 
+            cpoint == 0 ? surface.getTvRefs()[c] : (*cpoint)(1));
+
+        trim::TriangleData normals(
+            surface.getVnRefs()[a],
+            surface.getVnRefs()[b], 
+            cpoint == 0 ? surface.getVnRefs()[c] : (*cpoint)(2));
+
+        _tm.addTriangle(verticles, textures, normals);
+    }
+
+    void ObjFile::convertToTriangles(const Surface& surface)
     {
-        for (auto surface : s_)
+        int numberOfVerticles = surface.getVRefs().size();
+        if (numberOfVerticles == 3)
+            addSimpleTriangle(surface);
+        else if (numberOfVerticles == 4)
+            add2Triangles(surface);
+        else if (numberOfVerticles > 4)
+            addMultiTriangle(surface);
+        else
         {
-            int numberOfVerticles = surface->getVRefs().size();
-            if (numberOfVerticles == 3)
-                addSimpleTriangle(tm, *surface);
-            else if (numberOfVerticles == 4)
-                add2Triangle(tm, *surface);
-            else if (numberOfVerticles > 4)
-                addMultiTriangle(tm, *surface);
-            else
-            {
-                std::stringstream ss;
-                 ss << "Something wrong. Can't consturct urface from. " << 
-                 numberOfVerticles;
-                 throw ss.str();
-            }
-            
-        }
-        return tm;
+            std::stringstream ss;
+            ss << "Something wrong. Can't consturct urface from. " << 
+            numberOfVerticles;
+            throw ss.str();
+        }            
     }
+    
+    bool ObjFile::processSurface(const std::string& prefix,
+                                 const std::string& infoType,
+                                 std::istringstream& iss)
+    {
+        if (infoType != prefix)
+            return false;
+        
+        Surface s;
+        iss >> s;
+        s.makeRefsAbsolute(_vCount, _vtCount, _vnCount);
+        convertToTriangles(s);
+
+        return true;
+    }
+
+    trim::TriangleModel& ObjFile::parse() {       
+        std::ifstream infile(_fileName);
+        std::string line;
+        while (std::getline(infile, line))
+        {
+            std::istringstream iss(line);
+            std::string infoType;
+            iss >> infoType;
+
+            if (processFileEntry<GeometricVertex>("v", infoType, iss, _vCount) or
+                processFileEntry<TextureVertex>("vt", infoType, iss, _vtCount) or
+                processFileEntry<VertexNormal>("vn", infoType, iss, _vnCount) or
+                processSurface("f", infoType, iss))
+                continue;
+        }
+        return _tm;
+    }    
 } //end of namespace obj

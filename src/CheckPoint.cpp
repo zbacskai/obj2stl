@@ -1,3 +1,4 @@
+#if 0
 #include <CheckPoint.hpp>
 #include <eigen3/Eigen/Dense>
 
@@ -279,3 +280,4 @@ bool CheckPoint::isInModel(const trim::TriangleModel& tm)
 }
 
 }
+#endif

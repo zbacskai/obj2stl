@@ -9,31 +9,32 @@
 
 namespace {
 
-    void writeVertex(const trim::Triangle& triangle, 
+    void writeVertex(const trim::TriangleData& triangle, 
                            std::ofstream& ofile)
     {
         for (int i = 0; i < 3; ++i)
         {
             ofile << "        vertex ";
-            ofile << triangle[i].p[0] << " ";
-            ofile << triangle[i].p[1] << " ";
-            ofile << triangle[i].p[2] << std::endl;
+            ofile << triangle(i, 0) << " ";
+            ofile << triangle(i, 1) << " ";
+            ofile << triangle(i, 2) << std::endl;
         }
     }
 
-    void writeNormalVector(const trim::Triangle& triangle, 
+    void writeNormalVector(const trim::TriangleData& triangleNormal, 
                            std::ofstream& ofile)
     {
-        ofile << triangle.getNormalVector()[0] << " ";
-        ofile << triangle.getNormalVector()[1] << " ";
-        ofile << triangle.getNormalVector()[2] << std::endl;
+        ofile << triangleNormal(0,0) << " ";
+        ofile << triangleNormal(0,1) << " ";
+        ofile << triangleNormal(0,1) << std::endl;
     }
 
-    void writeTriangle(const trim::Triangle& triangle, 
+    void writeTriangle(const trim::TriangleData& triangle, 
+                       const trim::TriangleData& triangleNormal, 
                        std::ofstream& ofile)
     {
         ofile << "facet normal ";
-        writeNormalVector(triangle, ofile);
+        writeNormalVector(triangleNormal, ofile);
         ofile << "    outer loop" << std::endl;
         writeVertex(triangle, ofile);
         ofile << "    endloop" << std::endl;
@@ -55,9 +56,11 @@ void StlAscii::write(const trim::TriangleModel &tm) {
     ofile << std::scientific;
 
     ofile << "solid test " << std::endl;
-
-    for (auto triangle : tm.getTriangles())
-        writeTriangle(*triangle, ofile);
+    
+    auto& triangleNormals = tm.getTriangleNormals();
+    auto& triangles = tm.getTriangles();
+    for (unsigned int i = 0; i < triangles.size(); ++i)
+        writeTriangle(triangles[i], triangleNormals[i], ofile);
     ofile.close();
 }
 

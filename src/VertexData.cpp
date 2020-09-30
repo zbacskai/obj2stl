@@ -11,29 +11,29 @@ namespace obj {
     
 std::istream& operator>>( std::istream  &input, GeometricVertex &v )
 {
-    input >> v.v_.p[0];
-    input >> v.v_.p[1];
-    input >> v.v_.p[2];
-    v.w_ = 1.0;
-    input >> v.w_;
-    return input;
+    return v.process_coordinates(input);
+}
+
+void GeometricVertex::storeInModel(trim::TriangleModel& tm){
+    tm.addVertex(v_);
 }
 
 std::istream& operator>>( std::istream  &input, TextureVertex &v )
 {
-    input >> v.v_.p[0];
-    input >> v.v_.p[1];
-    input >> v.v_.p[2];
-    return input;
+    return v.process_coordinates(input);
+}
+
+void TextureVertex::storeInModel(trim::TriangleModel& tm){
+    tm.addTexture(v_);
 }
 
 std::istream& operator>>( std::istream  &input, VertexNormal &v )
 {
-    input >> v.v_.p[0];
-    input >> v.v_.p[1];
-    input >> v.v_.p[2];
+    return v.process_coordinates(input);
+}
 
-    return input;
+void VertexNormal::storeInModel(trim::TriangleModel& tm){
+    tm.addNormalVector(v_);
 }
 
 const std::vector<int>& Surface::getVRefs() const {

@@ -9,107 +9,63 @@
 
 namespace trim {
 
-struct Vertex {
-    float p[3];
-    operator Eigen::Vector3f() const {
-        Eigen::Vector3f v;
-        v << p[0], p[1] , p[2];
-        return v;
-    }
+typedef int32_t VertexRef;
+typedef uint16_t MatrixSelector;
 
-    operator Eigen::RowVector4f() const {
-        Eigen::RowVector4f v;
-        v << p[0], p[1], p[2], 1.0;
-        return v;
-    }
-
-    void setFromStr(const std::string& iStr)
-    {
-        std::stringstream param_desc(iStr);
-        std::string param;
-        std::vector<float> pl;
-
-        for (unsigned i = 0; std::getline(param_desc, param, ',') and (i < 3); ++i)
-            p[i] = std::atof(param.c_str());
-    }
-
-    float operator[](int index) const
-    {
-        return p[index];
-    }
-};
-
-class Triangle {
+class TriangleData {
     private:
-        Vertex vertex_[4];
-        Vertex& normalVector_;
-        bool normalVectorSet_;
-        bool minCalculated_;
-        bool maxCalculated_;
-        Vertex min_;
-        Vertex max_;
+        VertexRef _vertex[3];
+        uint16_t _matrixSelector;
+        uint16_t _reserved;
     public: 
-        const Vertex& operator[](int i) const { return vertex_[i]; };
-        const Vertex& getNormalVector() const { return normalVector_; };
+        TriangleData(VertexRef a, VertexRef b,
+                 VertexRef c);
 
-        Triangle(const Vertex &a, const Vertex &b, const Vertex &c, const Vertex &n = {0.0, 0.0, 0.0}) :
-            vertex_({a, b, c, n}), normalVector_(vertex_[3]), normalVectorSet_(false) ,
-            minCalculated_(false), maxCalculated_(false), min_({0.0, 0.0, 0.0}), max_({0.0, 0.0, 0.0 }){};
+        friend class TriangleModel;
 
-        void setNormalVector(const Vertex& n) {
-            normalVector_ = n;
-            normalVectorSet_ = true;
-            minCalculated_ = false;
-            maxCalculated_ = false;
-        }
-
-        void setVertex(int index, const Vertex& v)
-        {
-            if (index == 3)
-                setNormalVector(v);
-            else
-                vertex_[index] = v; 
-        }
-
-        void calculateNormalVector() {
-
-        }
-
-        const Vertex& getMin() {
-            if (not minCalculated_)
-            {
-                for (int i = 0; i < 3; ++i)
-                    min_.p[i] = std::min(vertex_[0].p[i], std::min(vertex_[1].p[i], vertex_[2].p[i]));
-
-                minCalculated_ = true;
-            }
-            return min_;
-        }
-
-        const Vertex& getMax() {
-            if (not maxCalculated_)
-            {
-                for (int i = 0; i < 3; ++i)
-                    max_.p[i] = std::max(vertex_[0].p[i], std::max(vertex_[1].p[i], vertex_[2].p[i]));
-                maxCalculated_ = true;
-            }       
-            return max_;
-        }
+        float operator()(int vertexIndex, int coordinate) const;
 };
 
 class TriangleModel
 {
 private:
-    std::vector<std::shared_ptr<Triangle>> triangles_;
-public:
-    TriangleModel(const std::vector<std::shared_ptr<Triangle>>& triangles) : triangles_(triangles) {};
-    TriangleModel() {};
-    void addTriangle(std::shared_ptr<Triangle> triangle);
-    const std::vector<std::shared_ptr<Triangle>>& getTriangles() const {
-        return triangles_;
-    }
+    MatrixSelector _vertexMatrix;
+    MatrixSelector _texturesMatrix;
+    MatrixSelector _normalMatrix;
+    unsigned int _lastIndexVertex;
+    unsigned int _lastIndexTexture;
+    unsigned int _lastIndexNormal;
+    std::vector<TriangleData> _triangles;
+    std::vector<TriangleData> _triangleTextures;
+    std::vector<TriangleData> _triangleNormals;
 
-    ~TriangleModel() {};
+    unsigned int addRow(MatrixSelector m, const Eigen::RowVector4f& v, unsigned int& lastIndex);
+
+    TriangleModel(const TriangleModel&); // not implemented
+    TriangleModel& operator=(const TriangleModel&); //not implemented
+public:
+    TriangleModel();
+    void addTriangle(const TriangleData &verticles,
+                    const TriangleData& triangleTexture = TriangleData(0, 0, 0),
+                    const TriangleData& triangleNormals = TriangleData(0, 0, 0));
+    const std::vector<TriangleData>& getTriangles() const;
+    const std::vector<TriangleData>& getTriangleTextures() const;
+    const std::vector<TriangleData>& getTriangleNormals() const;
+
+    typedef Eigen::Matrix<float, Eigen::Dynamic, 4> ModelMatrix;
+    typedef Eigen::Matrix4f TransFormationMatrix;
+
+    const ModelMatrix& getVerticleMatrix() const;
+    const ModelMatrix& getTextureMatrix() const;
+    const ModelMatrix& getNormalMatrix() const;
+
+    unsigned int addVertex(const Eigen::RowVector4f& v);
+    unsigned int addTexture(const Eigen::RowVector4f& v);
+    unsigned int addNormalVector(const Eigen::RowVector4f& v);
+
+    void applyTransformatioMatrix(const TransFormationMatrix& trMatrix);
+
+    ~TriangleModel();
 };
 
 } //end od namespace trim

@@ -17,23 +17,43 @@ class Surface;
 
 class ObjFile : public meshconvert::FileReaderInterface {
     private:
-        std::string fileName_;
-        int vCount_;
-        int vtCount_;
-        int vnCount_;
-        std::vector<std::shared_ptr<GeometricVertex>> v_;
-        std::vector<std::shared_ptr<TextureVertex>> vt_;
-        std::vector<std::shared_ptr<VertexNormal>> vn_;
-        std::vector<std::shared_ptr<Surface>> s_;
+        std::string _fileName;
+        trim::TriangleModel& _tm;
+        int _vCount;
+        int _vtCount;
+        int _vnCount;
+        
+        Eigen::RowVector4f  calculateMedian(
+            const trim::TriangleModel::ModelMatrix& m,
+            const std::vector<int>& refs) const;
+        void addMultiTriangle(const Surface& surface);
+        void add2Triangles(const Surface& surface);
+        void addSimpleTriangle(const Surface& surface,
+                               Eigen::Vector3i *cpoint = 0,
+                               int a=0, int b=1, int c=2);
+        void convertToTriangles(const Surface& surface);
+        template <typename T>
+        bool processFileEntry(const std::string& prefix,
+                              const std::string& infoType,
+                              std::istringstream& iss,
+                              int &counter)
+        {
+            if (infoType != prefix)
+                return false;
+            
+            T v;
+            iss >> v;
+            v.storeInModel(_tm);
+            counter++;
+            return true;
+        }
 
-        void addSimpleTriangle(trim::TriangleModel &tm, const Surface& s);
-        void add2Triangle(trim::TriangleModel &tm, const Surface& s);
-        trim::Vertex calculateMedian(const Surface& s);
-        void addMultiTriangle(trim::TriangleModel &tm, const Surface& s);
+        bool processSurface(const std::string& prefix,
+                            const std::string& infoType,
+                            std::istringstream& iss);
     public:
-        ObjFile(const char* fileName);
-        virtual void parse();
-        virtual trim::TriangleModel& convertToTriangleModel(trim::TriangleModel &tm);
+        ObjFile(const char* fileName, trim::TriangleModel& tm);
+        virtual trim::TriangleModel& parse();
         virtual ~ObjFile() {};
 };
 

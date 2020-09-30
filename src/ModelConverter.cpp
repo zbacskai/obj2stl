@@ -1,3 +1,4 @@
+#if 0
 #include <ModelConverter.hpp>
 #include <TriangleModel.hpp>
 
@@ -177,3 +178,4 @@ ModelConverter::~ModelConverter()
 }
 
 }
+#endif

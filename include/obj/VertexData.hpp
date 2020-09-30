@@ -7,42 +7,51 @@
 #include <vector>
 
 #include<TriangleModel.hpp>
+#include <eigen3/Eigen/Dense>
 
 namespace obj {
 
 class ObjVertexBase {
     protected:
-        trim::Vertex v_;
+        Eigen::RowVector4f v_;
     public:
-        ObjVertexBase(float x, float y, float z) : v_({x, y, z}) {};
-        operator const trim::Vertex&() const {
+        operator const Eigen::RowVector4f&() const {
             return v_;
+        }
+
+        std::istream& process_coordinates(std::istream  &input)
+        {
+            float c[4];
+            input >> c[0];
+            input >> c[1];
+            input >> c[2];
+            c[3] = 1.0;
+            input >> c[3];
+
+            v_ << c[0], c[1], c[2], c[3];
+            return input;
         }
 };
 
 class GeometricVertex : public ObjVertexBase{
-    private:
-        float w_;
     public:
-        GeometricVertex(float x, float y, float z, float w) : ObjVertexBase(x,y,z), w_(w) {}
-        GeometricVertex() : GeometricVertex(0.0, 0.0, 0.0, 1.0) {}
-        friend std::istream &operator>>( std::istream  &input, GeometricVertex &v ); 
+        GeometricVertex() {}
+        friend std::istream &operator>>( std::istream  &input, GeometricVertex &v );
+        void storeInModel(trim::TriangleModel& tm);
 };
 
 class TextureVertex : public ObjVertexBase {
     public:
-        TextureVertex(float i, float j, float k) :  ObjVertexBase(i,j,k) {};
-        TextureVertex() : TextureVertex(0.0, 0.0, 0.0) {}
-
+        TextureVertex() {}
         friend std::istream &operator>>( std::istream  &input, TextureVertex &v ); 
+        void storeInModel(trim::TriangleModel& tm);
 };
 
 class VertexNormal : public ObjVertexBase {
     public:
-        VertexNormal(float u, float v, float w) :  ObjVertexBase(u, v, w) {}
-        VertexNormal() : VertexNormal(0.0, 0.0, 0.0) {}
-
+        VertexNormal() {}
         friend std::istream &operator>>( std::istream  &input, VertexNormal &v ); 
+        void storeInModel(trim::TriangleModel& tm);
 };
 
 class Surface {

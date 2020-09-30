@@ -47,19 +47,21 @@ void StlBin::write(const trim::TriangleModel &tm) {
     f.num_of_triangles = htole32(f.num_of_triangles);
     ofile.write(reinterpret_cast<char*>(&f), sizeof(fheader));
 
-    for (auto triangle : tm.getTriangles())
+    auto& triangles = tm.getTriangles();
+    auto& triangleNormals = tm.getTriangleNormals();
+    for (unsigned int k = 0; k < triangles.size(); ++k)
     {
         triangle_info ti;
         for (int i = 0; i < 3; ++i)
         {
-            ti.normal[i].f = triangle->getNormalVector().p[i];
+            ti.normal[i].f = triangleNormals[k](0,i);
             ti.normal[i].wo = htole32(ti.normal[i].wo);
         }
 
         for (int j = 0; j < 3; ++j)
             for (int i = 0; i < 3; ++i)
             {
-                ti.v[j][i].f = triangle->operator[](j).p[i];
+                ti.v[j][i].f = triangles[k](j,i);
                 ti.v[j][i].wo = htole32(ti.v[j][i].wo);
             }
 

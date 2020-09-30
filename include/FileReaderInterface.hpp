@@ -9,9 +9,8 @@ namespace meshconvert {
 
 class FileReaderInterface {
     public:
-        FileReaderInterface(const char* fileName) {}
-        virtual void parse() = 0;
-        virtual trim::TriangleModel& convertToTriangleModel(trim::TriangleModel &tm) = 0;
+        FileReaderInterface(const char* fileName, trim::TriangleModel &tm) {}
+        virtual trim::TriangleModel& parse() = 0;
         virtual ~FileReaderInterface() {};
 };
 

@@ -9,18 +9,20 @@
 #include <memory>
 #include <FileReaderInterface.hpp>
 #include <FileWriterInterface.hpp>
+#if 0
 #include <ModelConverter.hpp>
 #include <CheckPoint.hpp>
+#endif
 
 namespace po = boost::program_options;
 
 class FileFactory {
     public:
         static std::shared_ptr<meshconvert::FileReaderInterface> getFileReader(
-            const std::string &iFormat, const std::string &iFileName)
+            const std::string &iFormat, const std::string &iFileName, trim::TriangleModel &tm)
         {
             if (iFormat == "obj")
-                return std::make_shared<obj::ObjFile>(iFileName.c_str());
+                return std::make_shared<obj::ObjFile>(iFileName.c_str(), tm);
             else
                 throw std::string("Supported input file formats: obj");
         }
@@ -79,28 +81,32 @@ int main(int argc, char* argv[]) {
     }
 
     try {
+        trim::TriangleModel tm;
         std::shared_ptr<meshconvert::FileReaderInterface> fr = 
             FileFactory::getFileReader(vm["iff"].as<std::string>(),
-                                       vm["if"].as<std::string>());
+                                       vm["if"].as<std::string>(),
+                                       tm);
 
         std::shared_ptr<meshconvert::FileWriterInterface> fw = 
             FileFactory::getFileWriter(vm["off"].as<std::string>(),
                                        vm["of"].as<std::string>());
 
-        trim::TriangleModel tm;
         fr->parse();
-        fr->convertToTriangleModel(tm);
         if (transformationOptions != "")
-        {
+        {   
+#if 0
             mc::ModelConverter mc(transformationOptions);
             mc.convert(tm);
+#endif
         }
         if (pointInside != "")
         {
+#if 0
             trim::Vertex v;
             v.setFromStr(pointInside);
             chp::CheckPoint c(v[0],v[1], v[2]);
             c.isInModel(tm);
+#endif
         }
         else
             fw->write(tm);
