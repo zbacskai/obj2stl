@@ -10,9 +10,7 @@
 #include <FileReaderInterface.hpp>
 #include <FileWriterInterface.hpp>
 #include <ModelConverter.hpp>
-#if 0
 #include <CheckPoint.hpp>
-#endif
 
 namespace po = boost::program_options;
 
@@ -99,12 +97,8 @@ int main(int argc, char* argv[]) {
         }
         if (pointInside != "")
         {
-#if 0
-            trim::Vertex v;
-            v.setFromStr(pointInside);
-            chp::CheckPoint c(v[0],v[1], v[2]);
-            c.isInModel(tm);
-#endif
+            chp::CheckPoint c;
+            c.isInModel(tm, utils::strCoord2RowVector(pointInside));
         }
         else
             fw->write(tm);

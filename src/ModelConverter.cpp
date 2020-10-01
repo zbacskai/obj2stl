@@ -1,5 +1,6 @@
 #include <ModelConverter.hpp>
 #include <TriangleModel.hpp>
+#include <Utils.hpp>
 
 #include <eigen3/Eigen/Dense>
 
@@ -10,22 +11,6 @@
 #include <cmath>
 
 #include <eigen3/Eigen/Dense>
-
-namespace {
-
-    Eigen::RowVector3f strCoord2RowVector(const std::string& iStr)
-    {
-        std::stringstream param_desc(iStr);
-        std::string param;
-        Eigen::RowVector3f pl;
-
-        for (unsigned i = 0; std::getline(param_desc, param, ',') and (i < 3); ++i)
-            pl(i) = std::atof(param.c_str());
-
-        return pl;
-    }
-
-}
 
 namespace mc {
 
@@ -121,7 +106,7 @@ namespace {
                                 const std::string& paramStr,
                                 mc::ConversionBaseVector &conversionStack)
     {
-        Eigen::RowVector3f v = strCoord2RowVector(paramStr);
+        Eigen::RowVector3f v = utils::strCoord2RowVector(paramStr);
                         
         if (conversionType == "scale")
             conversionStack.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));

@@ -3,15 +3,14 @@
 #define CheckPoint_hpp
 
 #include <TriangleModel.hpp>
+#include <Utils.hpp>
 
 namespace chp {
 
 class CheckPoint {
-    private:
-        trim::Vertex point_;
     public:
-        CheckPoint(float x, float y, float z) : point_({x, y, z}) {};
-        bool isInModel(const trim::TriangleModel& tm);
+        bool isInModel(const trim::TriangleModel& tm,
+                       const Eigen::RowVector3f& point);
 };
 
 }
