@@ -19,10 +19,10 @@ namespace po = boost::program_options;
 class FileFactory {
     public:
         static std::shared_ptr<meshconvert::FileReaderInterface> getFileReader(
-            const std::string &iFormat, const std::string &iFileName, trim::TriangleModel &tm)
+            const std::string &iFormat, const std::string &iFileName)
         {
             if (iFormat == "obj")
-                return std::make_shared<obj::ObjFile>(iFileName.c_str(), tm);
+                return std::make_shared<obj::ObjFile>(iFileName.c_str());
             else
                 throw std::string("Supported input file formats: obj");
         }
@@ -81,17 +81,17 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        trim::TriangleModel tm;
+
         std::shared_ptr<meshconvert::FileReaderInterface> fr = 
             FileFactory::getFileReader(vm["iff"].as<std::string>(),
-                                       vm["if"].as<std::string>(),
-                                       tm);
+                                       vm["if"].as<std::string>());
 
         std::shared_ptr<meshconvert::FileWriterInterface> fw = 
             FileFactory::getFileWriter(vm["off"].as<std::string>(),
                                        vm["of"].as<std::string>());
 
-        fr->parse();
+        trim::TriangleModel tm;
+        fr->parse(tm);
         if (transformationOptions != "")
         {   
 #if 0

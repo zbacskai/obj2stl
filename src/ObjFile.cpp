@@ -8,10 +8,9 @@
 
 namespace obj {
 
-    ObjFile::ObjFile(const char* fileName, trim::TriangleModel& tm) : 
-        FileReaderInterface(fileName, tm),
+    ObjFile::ObjFile(const char* fileName) : 
+        FileReaderInterface(fileName),
         _fileName(fileName), 
-        _tm(tm),
         _vCount(0), _vtCount(0), _vnCount(0) 
         
     {
@@ -39,26 +38,27 @@ namespace obj {
     }
 
 
-    void ObjFile::addMultiTriangle(const Surface& surface) {
-        std::cout << "Multi Triangle" << std::endl;
-        int medianVertex = _tm.addVertex(calculateMedian(_tm.getVerticleMatrix(), surface.getVRefs()));
-        int medianTexture = _tm.addTexture(calculateMedian(_tm.getTextureMatrix(), surface.getTvRefs()));
-        int medianNormal = _tm.addNormalVector(calculateMedian(_tm.getNormalMatrix(), surface.getVnRefs()));
+    void ObjFile::addMultiTriangle(const Surface& surface,
+                                   trim::TriangleModel& tm) {
+        int medianVertex = tm.addVertex(calculateMedian(tm.getVerticleMatrix(), surface.getVRefs()));
+        int medianTexture = tm.addTexture(calculateMedian(tm.getTextureMatrix(), surface.getTvRefs()));
+        int medianNormal = tm.addNormalVector(calculateMedian(tm.getNormalMatrix(), surface.getVnRefs()));
 
         Eigen::Vector3i median;
         median << medianVertex , medianTexture , medianNormal;
         int prev = 0;
         for (int curr = 1; curr < surface.getVRefs().size(); ++curr, ++prev)
-            addSimpleTriangle(surface, &median, prev, curr, 0);
+            addSimpleTriangle(surface, tm, &median, prev, curr, 0);
     }
 
 
-    void ObjFile::add2Triangles(const Surface& surface) {
-        addSimpleTriangle(surface, 0, 0, 1, 2);
-        addSimpleTriangle(surface, 0, 2, 3, 0);
+    void ObjFile::add2Triangles(const Surface& surface,  trim::TriangleModel& tm) {
+        addSimpleTriangle(surface, tm, 0, 0, 1, 2);
+        addSimpleTriangle(surface, tm, 0, 2, 3, 0);
     }
 
     void ObjFile::addSimpleTriangle(const Surface& surface,
+                                    trim::TriangleModel& tm,
                                     Eigen::Vector3i* cpoint,
                                     int a, int b, int c) {
         trim::TriangleData verticles(
@@ -76,18 +76,18 @@ namespace obj {
             surface.getVnRefs()[b], 
             cpoint == 0 ? surface.getVnRefs()[c] : (*cpoint)(2));
 
-        _tm.addTriangle(verticles, textures, normals);
+        tm.addTriangle(verticles, textures, normals);
     }
 
-    void ObjFile::convertToTriangles(const Surface& surface)
+    void ObjFile::convertToTriangles(const Surface& surface,  trim::TriangleModel& tm)
     {
         int numberOfVerticles = surface.getVRefs().size();
         if (numberOfVerticles == 3)
-            addSimpleTriangle(surface);
+            addSimpleTriangle(surface, tm);
         else if (numberOfVerticles == 4)
-            add2Triangles(surface);
+            add2Triangles(surface, tm);
         else if (numberOfVerticles > 4)
-            addMultiTriangle(surface);
+            addMultiTriangle(surface, tm);
         else
         {
             std::stringstream ss;
@@ -104,15 +104,15 @@ namespace obj {
         if (infoType != prefix)
             return false;
         
-        Surface s;
-        iss >> s;
-        s.makeRefsAbsolute(_vCount, _vtCount, _vnCount);
-        convertToTriangles(s);
+        std::shared_ptr<Surface> s = std::make_shared<Surface>();
+        iss >> *s;
+        s->makeRefsAbsolute(_vCount, _vtCount, _vnCount);
+        _surfaces.push_back(s);
 
         return true;
     }
 
-    trim::TriangleModel& ObjFile::parse() {       
+    trim::TriangleModel& ObjFile::parse(trim::TriangleModel& tm) {       
         std::ifstream infile(_fileName);
         std::string line;
         while (std::getline(infile, line))
@@ -121,12 +121,16 @@ namespace obj {
             std::string infoType;
             iss >> infoType;
 
-            if (processFileEntry<GeometricVertex>("v", infoType, iss, _vCount) or
-                processFileEntry<TextureVertex>("vt", infoType, iss, _vtCount) or
-                processFileEntry<VertexNormal>("vn", infoType, iss, _vnCount) or
+            if (processFileEntry<GeometricVertex>("v", infoType, iss, _vCount, tm) or
+                processFileEntry<TextureVertex>("vt", infoType, iss, _vtCount, tm) or
+                processFileEntry<VertexNormal>("vn", infoType, iss, _vnCount, tm) or
                 processSurface("f", infoType, iss))
                 continue;
         }
-        return _tm;
+        for (auto s : _surfaces)
+        {
+            convertToTriangles(*s, tm);
+        }
+        return tm;
     }    
 } //end of namespace obj
