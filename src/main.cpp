@@ -9,8 +9,8 @@
 #include <memory>
 #include <FileReaderInterface.hpp>
 #include <FileWriterInterface.hpp>
-#if 0
 #include <ModelConverter.hpp>
+#if 0
 #include <CheckPoint.hpp>
 #endif
 
@@ -94,10 +94,8 @@ int main(int argc, char* argv[]) {
         fr->parse(tm);
         if (transformationOptions != "")
         {   
-#if 0
             mc::ModelConverter mc(transformationOptions);
             mc.convert(tm);
-#endif
         }
         if (pointInside != "")
         {

@@ -16,7 +16,7 @@ namespace mc {
         std::string conversionParameters_;
     public:
         ModelConverter(const std::string& conversionParameters);
-        void convert(trim::TriangleModel tm);
+        void convert(trim::TriangleModel &tm);
         ~ModelConverter();
     };
         

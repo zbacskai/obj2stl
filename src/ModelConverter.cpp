@@ -1,4 +1,3 @@
-#if 0
 #include <ModelConverter.hpp>
 #include <TriangleModel.hpp>
 
@@ -9,6 +8,24 @@
 #include <sstream>
 #include <iostream>
 #include <cmath>
+
+#include <eigen3/Eigen/Dense>
+
+namespace {
+
+    Eigen::RowVector3f strCoord2RowVector(const std::string& iStr)
+    {
+        std::stringstream param_desc(iStr);
+        std::string param;
+        Eigen::RowVector3f pl;
+
+        for (unsigned i = 0; std::getline(param_desc, param, ',') and (i < 3); ++i)
+            pl(i) = std::atof(param.c_str());
+
+        return pl;
+    }
+
+}
 
 namespace mc {
 
@@ -104,15 +121,14 @@ namespace {
                                 const std::string& paramStr,
                                 mc::ConversionBaseVector &conversionStack)
     {
-        trim::Vertex v;
-        v.setFromStr(paramStr);
+        Eigen::RowVector3f v = strCoord2RowVector(paramStr);
                         
         if (conversionType == "scale")
-            conversionStack.push_back(std::make_shared<mc::Scale>(v[0], v[1], v[2]));
+            conversionStack.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));
         else if (conversionType == "translation")
-            conversionStack.push_back(std::make_shared<mc::Translation>(v[0], v[1], v[2]));
+            conversionStack.push_back(std::make_shared<mc::Translation>(v(0), v(1), v(2)));
         else if (conversionType == "rotate")
-            conversionStack.push_back(std::make_shared<mc::Rotate>(v[0], v[1], v[2]));
+            conversionStack.push_back(std::make_shared<mc::Rotate>(v(0), v(1), v(2)));
         else
         {
             std::stringstream ss;
@@ -149,7 +165,7 @@ ModelConverter::ModelConverter(const std::string& conversionParameters) :
 
 }
     
-void ModelConverter::convert(trim::TriangleModel tm)
+void ModelConverter::convert(trim::TriangleModel &tm)
 {
     mc::ConversionBaseVector conversionStack;
     buildConversionStack(conversionParameters_, conversionStack);
@@ -158,18 +174,7 @@ void ModelConverter::convert(trim::TriangleModel tm)
     for(unsigned int i = 1; i < conversionStack.size(); ++i)
         cv *= conversionStack[i]->getMatrix();
 
-    for (auto triangle : tm.getTriangles())
-    {
-        for(unsigned int i = 0; i < 4; ++i)
-        {
-            // index 3 is the normal vector
-            const trim::Triangle& tr = *triangle;
-            Eigen::RowVector4f vertexVec = tr[i];           
-            vertexVec = vertexVec * cv;
-            triangle->setVertex(i, 
-                {vertexVec(0), vertexVec(1), vertexVec(2)});
-        }
-    }
+    tm.applyTransformatioMatrix(cv);
 }
 
 ModelConverter::~ModelConverter()
@@ -178,4 +183,3 @@ ModelConverter::~ModelConverter()
 }
 
 }
-#endif
