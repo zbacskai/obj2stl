@@ -7,8 +7,13 @@
 
 namespace chp {
 
+class CheckPointImpl;
+
 class CheckPoint {
+    private:
+        std::shared_ptr<CheckPointImpl> _impl;
     public:
+        CheckPoint();
         bool isInModel(const trim::TriangleModel& tm,
                        const Eigen::RowVector3f& point);
 };

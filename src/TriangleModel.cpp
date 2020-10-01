@@ -64,6 +64,11 @@ TriangleData::TriangleData(VertexRef a, VertexRef b, VertexRef c)
     _vertex[2] = c;
 }
 
+VertexRef TriangleData::operator()(int index)
+{
+    return _vertex[index];
+}
+
 float TriangleData::operator()(int vertexIndex, int coordinate) const
 {
     return MatrixManager::instance().getMatrix(_matrixSelector)(_vertex[vertexIndex], coordinate);
