@@ -23,7 +23,7 @@ class TriangleData {
 
         friend class TriangleModel;
 
-        VertexRef operator()(int index);
+        VertexRef operator()(int index) const;
 
         float operator()(int vertexIndex, int coordinate) const;
 };

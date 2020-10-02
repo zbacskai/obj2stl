@@ -64,7 +64,7 @@ TriangleData::TriangleData(VertexRef a, VertexRef b, VertexRef c)
     _vertex[2] = c;
 }
 
-VertexRef TriangleData::operator()(int index)
+VertexRef TriangleData::operator()(int index) const
 {
     return _vertex[index];
 }

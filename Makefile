@@ -6,7 +6,7 @@ SOURCES:= $(wildcard ./src/*.cpp)
 OBJS:= $(patsubst %.cpp, %.o, $(SOURCES))
 LDFLAGS:=-lboost_program_options
 
-%.o: %.cpp
+%.o: %.cpp %.hpp
 	g++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 obj-convert: $(OBJS)

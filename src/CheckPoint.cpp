@@ -17,105 +17,121 @@
 
 #include <cmath>
 
+#include <TriangleModel.hpp>
+
 namespace chp {
 
     struct edge3d {
-        static const uint32_t edge01;
-        static const uint32_t edge02;
-        static const uint32_t edge12;
-        int32_t _vertexIndex;
-        uint32_t _qualifiedEdges;
-
-        edge3d() : _vertexIndex(0), _qualifiedEdges(0) {};
-
-        static uint32_t getIndexCode(int i1, int i2)
-        {
-            switch(i1) {
-                case 0:
-                    switch (i2)
-                    {
-                        case 1:
-                            return edge3d::edge01;
-                            break;
-                        case 2:
-                            return edge3d::edge02;
-                            break;
-                        default:
-                            throw exception::GenericException("Invalid second edge index, with first edge index 0");
-                    }
-                    break;
-                case 1:
-                    if (i2 != 2)
-                        throw exception::GenericException("Invalid edge. It must be edge 1-2");
-                    return edge3d::edge12;
-                    break;
-                default:
-                    throw exception::GenericException("invalid edge index.");
-            }
-        }
+        trim::VertexRef _e[2];
+        trim::VertexRef _n[2];
+        int index_;
     };
 
-    const uint32_t edge3d::edge01 = 0x01;
-    const uint32_t edge3d::edge02 = 0x02;
-    const uint32_t edge3d::edge12 = 0x04;
+    struct Polygon {
 
-    struct edge3dTransformed {
-        float dim[2];
-        float norm[2];
-        float orientation;
-        float reserved;
+    };
+
+    class PolygonMaster {
+        private:
+            unsigned int _amountOfEdges;
+            int _projectedPlaneIndex;
+            float _planeCoordinate;
+            Eigen::Matrix<float, 3, Eigen::Dynamic> _ia;
+            Eigen::Matrix<float, 3, Eigen::Dynamic> _ib;
+            Eigen::Matrix<float, 3, Eigen::Dynamic> _ib_a;
+            Eigen::Matrix3f _plane;
+        public:
+            PolygonMaster(unsigned int amountOfEdges,
+                         int projectedPlaneIndex,
+                         float planeCoordinate) : 
+                _amountOfEdges(amountOfEdges), 
+                _projectedPlaneIndex(projectedPlaneIndex),
+                _planeCoordinate(planeCoordinate),
+                _ia(3, amountOfEdges),
+                _ib(3, amountOfEdges), _ib_a(3, amountOfEdges)
+            {
+                float p = planeCoordinate;
+                switch(projectedPlaneIndex)
+                {
+                    case 0: // X
+                        _plane <<   p,   p,   p,
+                                  0.0, 1.0, 0.0,
+                                  0.0, 0.0, 1.0;
+                        break;
+                    case 1:
+                        _plane << 0.0, 1.0, 0.0,
+                                    p,   p,   p,
+                                  0.0, 0.0, 1.0; 
+                        break;
+                    case 2:
+                        _plane << 0.0, 1.0, 0.0,
+                                  0.0, 0.0, 1.0,
+                                    p,   p,   p;
+                        break;
+                    default:
+                        break;
+                }
+            }
     };
 
     class CheckPointImpl {
         private:
             typedef std::list<edge3d> EdgeList;
             std::vector<EdgeList> _edges;
+            typedef std::list<Polygon> PolygonList;
+            std::vector<PolygonList> _polygons;
 
-            bool checkIfEdgeQualifes(const float dim, const int index,
+            void checkIfEdgeQualifes(const float pointXYZCoord, 
+                                     const int dimIndex,
                                      const trim::TriangleData& triangle,
-                                     edge3d& edge,
+                                     const trim::TriangleData& normals,
+                                     const int triangleIndex,
                                      int tindex1, int tindex2)
             {
-                float dimMin = std::min(triangle(tindex1, index), triangle(tindex2, index));
-                float dimMax = std::max(triangle(tindex1, index), triangle(tindex2, index));
-                if ( dimMin <= dim and dim <= dimMax)
-                {
-                    edge._qualifiedEdges |= edge.getIndexCode(tindex1, tindex2);
-                    return true;
-                }
-                return false;
+                float pointXYZMin = std::min(triangle(tindex1, dimIndex), triangle(tindex2, dimIndex));
+                float pointXYZMax= std::max(triangle(tindex1, dimIndex), triangle(tindex2, dimIndex));
+                if ( pointXYZMin <= pointXYZCoord and pointXYZCoord <= pointXYZMax)
+                    _edges[dimIndex].push_back({triangle(tindex1), triangle(tindex2), 
+                                                normals(tindex1), normals(tindex2), triangleIndex});
             }
                                      
-            void filterOneDimension(const float dim, const int index,
+            void filterOneDimension(const Eigen::RowVector3f& point,
+                                    const int dimIndex,
                                     const trim::TriangleModel& tm)
             {
                 const trim::TriangleModel::ModelMatrix &mv = tm.getVerticleMatrix();
                 const trim::TriangleModel::ModelMatrix &mn = tm.getNormalMatrix();
                 const std::vector<trim::TriangleData> &verticles = tm.getTriangles();
                 const std::vector<trim::TriangleData> &normals = tm.getTriangleNormals();
-                for (int i = 0; i < verticles.size(); ++i) { // check if triangle needs here
-                    const trim::TriangleData& triangle = verticles[i];
-                    edge3d e;
-                    e._vertexIndex = i;
-                    bool storeIt = (
-                        checkIfEdgeQualifes(dim, i, triangle, e, 0, 1) or
-                        checkIfEdgeQualifes(dim, i, triangle, e, 0, 2) or
-                        checkIfEdgeQualifes(dim, i, triangle, e, 1, 2)
-                    );
-                    if (storeIt)
-                        _edges[index].push_back(e);
+                for (int triangleIndex = 0; triangleIndex < verticles.size(); ++triangleIndex) { // check if triangle needs here
+                    const trim::TriangleData& triangle = verticles[triangleIndex];
+                    const trim::TriangleData& normal = normals[triangleIndex];
+                    
+                    checkIfEdgeQualifes(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 1);
+                    checkIfEdgeQualifes(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 2);
+                    checkIfEdgeQualifes(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 1, 2);
                 }
+            }
+
+            void calculate2DPolygons(const Eigen::RowVector3f& point, int dimensionIndex)
+            {
+                unsigned int numberOfEdges = _edges[dimensionIndex].size();
+                PolygonMaster p(_edges[dimensionIndex].size(), dimensionIndex, point(dimensionIndex));
             }
 
             void filterEdgesByPlanes(const trim::TriangleModel& tm,
                                      const Eigen::RowVector3f& point)
             {
-                for (int i = 0; i <3; ++i)
-                    filterOneDimension(point(i), i, tm);
+                for (int i = 0; i < 3; ++i)
+                    filterOneDimension(point, i, tm);
+
+                for (int i = 0; i < 3; ++i)
+                    calculate2DPolygons(point, i);
             }
         public:
 
-            CheckPointImpl() : _edges(3) {};
+            CheckPointImpl() : _edges(3) {
+            };
 
             bool isInModel(const trim::TriangleModel& tm,
                            const Eigen::RowVector3f& point)
