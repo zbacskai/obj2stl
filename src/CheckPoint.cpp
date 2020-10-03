@@ -47,11 +47,20 @@ namespace chp {
     struct edge2d {
         std::set<point2d, PointCmp> p;
         point2d nc;
-        float n;
+    };
+
+    struct edge2dNice {
+        point2d p[2];
+        float directionOfFace;
+
+        void print() const {
+            std::cout << directionOfFace << " " << p[0].x << "," << p[0].y << " " << p[1].x << "," << p[1].y << std::endl;
+        }
     };
 
     struct Polygon {
-
+        int _poligonIndex;
+        std::vector<edge2dNice> _edges;
     };
 
     class PolygonMaster {
@@ -69,6 +78,7 @@ namespace chp {
             Eigen::RowVector3f _p01xp02;
             Eigen::Matrix3f _plane;
             std::map<int, edge2d> _2dEdges;
+            std::vector<edge2dNice> _2dedgesNice;
 
             static const int dimMapX[3];
             static const int dimMapY[3];
@@ -169,15 +179,101 @@ namespace chp {
                 }
             }
 
+            void massageEdges() {
+                for (auto& edge : _2dEdges)
+                {
+                    edge2dNice en;
+                    unsigned int i = 0;
+                    // add the points in order x < y.
+                    for (auto& pnts : edge.second.p)
+                    {
+                        en.p[i] = pnts;
+                        ++i;
+                    }
+                    //Calculate a direction :-)
+                    float carthesian = (en.p[1].x - en.p[0].x)*(edge.second.nc.y - en.p[0].y) - (en.p[1].y - en.p[0].y) * (edge.second.nc.x -en.p[0].x);
+                    en.directionOfFace =  carthesian > 0 ? 1.0 :
+                                                           (carthesian == 0 ? 0.0 : -1.0);
+                    _2dedgesNice.push_back(en);
+                }
+            }
+
             void projectEdges(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
             {
                 fillMatrixes(edges, tm);
                 calculate2dEdges();
+                massageEdges();
+            }
+
+            void calculatePolygons() {
+                std::vector<Polygon> poligons;
+                std::map<point2d, int, PointCmp> point2poligon; 
+                bool mergeDone = true;
+                for (auto& edge : _2dedgesNice)
+                {
+                    const auto itA = point2poligon.find(edge.p[0]);
+                    const auto itB = point2poligon.find(edge.p[1]);
+
+                    if (itA == point2poligon.end() and
+                        itB == point2poligon.end())
+                    {
+                        point2poligon.insert(std::pair<point2d, int>(edge.p[0], poligons.size()));
+                        point2poligon.insert(std::pair<point2d, int>(edge.p[1], poligons.size()));
+                        Polygon poly;
+                        poly._poligonIndex = poligons.size();
+                        poly._edges.push_back(edge);
+                        poligons.push_back(poly);
+                    }
+                    else if (itA == point2poligon.end())
+                    {
+                        int polyIndexB = itB->second;
+                        point2poligon.insert(std::pair<point2d, int>(edge.p[0], polyIndexB));
+                        poligons[polyIndexB]._edges.push_back(edge);
+                    }
+                    else if (itB == point2poligon.end())
+                    {
+                        int polyIndexA = itA->second;
+                        point2poligon.insert(std::pair<point2d, int>(edge.p[1], polyIndexA));
+                        poligons[polyIndexA]._edges.push_back(edge);
+                    }
+                    else
+                    {   
+                        int polyIndexA = itA->second;
+                        int polyIndexB = itB->second;
+                        if (polyIndexA == polyIndexB) // same poligon just push edge
+                            poligons[polyIndexA]._edges.push_back(edge);
+                        else
+                        {
+                            //merge poligons
+                            Polygon &pA = poligons[polyIndexA];
+                            Polygon &pB = poligons[polyIndexB];
+                            for (auto& edge : pB._edges)
+                                pA._edges.push_back(edge);
+                            pB._edges.clear();
+                            std::list<point2d> pu;
+                            for (auto& p2p : point2poligon)
+                            {
+                                pu.push_back(p2p.first);
+                            }
+                            for (auto& p : pu)
+                                point2poligon[p] = polyIndexA;
+                        }
+                    }
+                }
+
+                for (auto &poly : poligons)
+                {
+                    std::cout << "Polygon: " << poly._poligonIndex << " <> " << _projectedPlaneIndex << std::endl;
+                    std::cout << "------------------------------------------------" << std::endl;
+                    for (auto& pnts : poly._edges)
+                        pnts.print();
+                }
             }
 
             void getPolygons(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
             {
                 projectEdges(edges, tm);
+                calculatePolygons();
             }
     };
 
