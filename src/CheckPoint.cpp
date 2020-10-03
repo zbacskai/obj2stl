@@ -253,7 +253,8 @@ namespace chp {
                             std::list<point2d> pu;
                             for (auto& p2p : point2poligon)
                             {
-                                pu.push_back(p2p.first);
+                                if (p2p.second == polyIndexB)
+                                    pu.push_back(p2p.first);
                             }
                             for (auto& p : pu)
                                 point2poligon[p] = polyIndexA;
