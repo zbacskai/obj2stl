@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef StlAscii_hpp
 #define StlAscii_hpp
 

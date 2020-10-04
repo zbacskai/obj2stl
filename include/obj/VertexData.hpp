@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef VertexData_hpp
 #define vertexData_hpp
 

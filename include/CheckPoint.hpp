@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef CheckPoint_hpp
 #define CheckPoint_hpp
 

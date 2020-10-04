@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef FileWriterInterface_hpp
 #define FileWriterInterface_hpp
 

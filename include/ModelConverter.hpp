@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef ModelConverter_hpp
 #define ModelConverter_hpp
 

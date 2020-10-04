@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef TriangleModel_hpp
 #define TriangleModel_hpp
 

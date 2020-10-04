@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef ObjFile_hpp
 #define ObjFile_hpp
 

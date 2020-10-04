@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef StlBin_hpp
 #define StlBin_hpp
 

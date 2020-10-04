@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef Utils_hpp
 #define Utils_hpp
 

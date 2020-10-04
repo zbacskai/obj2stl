@@ -1,4 +1,4 @@
-#pragma once
+#
 #ifndef FileReaderInterface_hpp
 #define FileReaderInterface_hpp
 
