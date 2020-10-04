@@ -179,7 +179,7 @@ namespace chp {
                 }
             }
 
-            void massageEdges() {
+            void convertEdges2NicerForm() {
                 for (auto& edge : _2dEdges)
                 {
                     edge2dNice en;
@@ -204,18 +204,24 @@ namespace chp {
             {
                 fillMatrixes(edges, tm);
                 calculate2dEdges();
-                massageEdges();
+                convertEdges2NicerForm();
             }
 
-            void calculatePolygons() {
-                std::map<int, Polygon> poligons;
-                std::map<point2d, int, PointCmp> point2poligon; 
-                unsigned int pIndex = 0;
+
+            std::map<point2d, int, PointCmp> initialisePointMap()
+            {
+                std::map<point2d, int, PointCmp> point2poligon;
                 for (auto& edge : _2dedgesNice)
                 {
                     point2poligon.insert(std::pair<point2d, int>(edge.p[0], -1));
                     point2poligon.insert(std::pair<point2d, int>(edge.p[1], -1));
                 }
+                return std::move(point2poligon);
+            }
+
+            void precalcPointsToPoligins(std::map<point2d, int, PointCmp> &point2poligon)
+            {
+                unsigned int pIndex = 0;
                 for (auto& edge : _2dedgesNice)
                 {   
                     int p1 = point2poligon[edge.p[0]];
@@ -233,7 +239,11 @@ namespace chp {
                         pIndex++;
                     }
                 }
+            }
 
+            std::map<int, Polygon> clusterPointsToFinalPoligons(std::map<point2d, int, PointCmp> &point2poligon)
+            {
+                std::map<int, Polygon> poligons;
                 bool mergeDone = true;
                 while(mergeDone)
                 {
@@ -258,6 +268,10 @@ namespace chp {
                     poligons[key]._edges.push_back(edge);
                 }
 
+                return std::move(poligons);
+            }
+
+            void debugPolygons(const std::map<int, Polygon> &poligons) const {
                 for (auto &poly : poligons)
                 {
                     std::cout << "Polygon: " << poly.first << " <> " << _projectedPlaneIndex << std::endl;
@@ -265,6 +279,13 @@ namespace chp {
                     for (auto& pnts : poly.second._edges)
                         pnts.print();
                 }
+            }
+
+            void calculatePolygons() {
+                std::map<point2d, int, PointCmp> &&point2poligon = initialisePointMap();
+                precalcPointsToPoligins(point2poligon);
+                std::map<int, Polygon> &&poligons = clusterPointsToFinalPoligons(point2poligon);
+                debugPolygons(poligons);
             }
 
             void getPolygons(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
