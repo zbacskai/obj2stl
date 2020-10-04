@@ -15,10 +15,10 @@ namespace logging {
     std::cout << logging::getCurrentTimestamp() << "| " << __VA_ARGS__ << std::endl;\
 }
 
-#ifdef DEBUG
+#ifdef LOG_DEBUG
     #define debug(...) log(__VA_ARGS__)
 #else
-    #define debug(...)
+    #define debug(...) {}
 #endif
 
 #endif

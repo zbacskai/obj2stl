@@ -63,7 +63,7 @@ struct Polygon {
         for (auto& e : _edges) {
             float carthesian = (e.p[1].x - e.p[0].x)*(y - e.p[0].y) - (e.p[1].y - e.p[0].y) * (x -e.p[0].x);
             bool inside = (carthesian != e.directionOfFace);
-            debug(( inside ? "I " : "O ") << x << "," << y);
+            debug(( inside ? "I " : "] O ") << x << "," << y);
             retVal |= inside;
         }
         return retVal;
@@ -372,7 +372,7 @@ public:
         for (int i = 0; i < 3; ++i)
             ret ^= isPointIn2dProjection(point, i, tm);
 
-        debug("Point: " << point << " is " <<  (ret ? "inside" : "outside"));
+        log("Point: [" << point << "] is " <<  (ret ? "inside" : "outside"));
         return ret;
     }
 };
