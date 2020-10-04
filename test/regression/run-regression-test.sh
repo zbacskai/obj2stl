@@ -37,3 +37,5 @@ echo -e "\nRunning basic stl-bin conversion.\n\n"
 test_obj_ascii_conversion data/obj-files-big expected-stl-to-bin stl-bin
 echo -e "\nRunning basic stl-ascii conversion. - translate\n\n"
 test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-translate stl-ascii '--transformations translation=1.2,3.1,0.0'
+echo -e "\nRunning basic stl-ascii conversion. - translate\n\n"
+test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-rotate stl-ascii '--transformations rotate=-23.1,67.1,11.0'
