@@ -41,3 +41,7 @@ echo -e "\nRunning basic stl-ascii conversion. - rotate\n\n"
 test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-rotate stl-ascii '--transformations rotate=-23.1,67.1,11.0'
 echo -e "\nRunning basic stl-ascii conversion. - scale\n\n"
 test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-scale stl-ascii '--transformations scale=2,1,0'
+echo -e "\nRunning basic stl-ascii conversion. - translation/scale/rotate\n\n"
+test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-all-trans-1 stl-ascii '--transformations translation=1.2,3.1,0.0/scale=2,1,0/rotate=-23.1,67.1,11.'
+echo -e "\nRunning basic stl-ascii conversion. - scale/rotate/translation\n\n"
+test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-all-trans-2 stl-ascii '--transformations scale=2,1,0/rotate=-23.1,67.1,11.0/translation=1.2,3.1,0.0'
