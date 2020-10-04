@@ -10,8 +10,6 @@
 #include <iostream>
 #include <cmath>
 
-#include <eigen3/Eigen/Dense>
-
 namespace mc {
 
     class ConversionBase 

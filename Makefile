@@ -14,6 +14,9 @@ obj-convert: $(OBJS)
 
 all: $(APP)
 
+check:
+	cppclean --verbose .
+
 clean:
 	rm -rf src/*.o
 	rm -rf $(APP)

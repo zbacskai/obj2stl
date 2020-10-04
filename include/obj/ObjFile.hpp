@@ -10,9 +10,6 @@
 
 namespace obj {
 
-class GeometricVertex;
-class TextureVertex;
-class VertexNormal;
 class Surface;
 
 class ObjFile : public meshconvert::FileReaderInterface {
