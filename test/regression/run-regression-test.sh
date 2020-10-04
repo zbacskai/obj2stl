@@ -20,7 +20,7 @@ function test_obj_ascii_conversion {
 
         echo "Executing: ${BINARY} obj ${FILE} ${OUT_FILE_TYPE} ${STL_FILE_OUT} ${EXTRA_PARAMS}"
         ${BINARY} obj ${FILE} ${OUT_FILE_TYPE} ${STL_FILE_OUT} ${EXTRA_PARAMS}
-        RESULT=$(diff ${STL_FILE_CMP} ${STL_FILE_OUT})
+        RESULT=$(diff ${STL_FILE_CMP} ${STL_FILE_OUT} 2>&1)
         if [ -z "${RESULT}" ]
         then
           echo -e "${GREEN}Passed${NC}"
@@ -37,5 +37,7 @@ echo -e "\nRunning basic stl-bin conversion.\n\n"
 test_obj_ascii_conversion data/obj-files-big expected-stl-to-bin stl-bin
 echo -e "\nRunning basic stl-ascii conversion. - translate\n\n"
 test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-translate stl-ascii '--transformations translation=1.2,3.1,0.0'
-echo -e "\nRunning basic stl-ascii conversion. - translate\n\n"
+echo -e "\nRunning basic stl-ascii conversion. - rotate\n\n"
 test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-rotate stl-ascii '--transformations rotate=-23.1,67.1,11.0'
+echo -e "\nRunning basic stl-ascii conversion. - scale\n\n"
+test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-scale stl-ascii '--transformations scale=2,1,0'
