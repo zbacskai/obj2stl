@@ -1,6 +1,6 @@
 APP:=obj-convert
 SRC_DIR:=./src
-CXXFLAGS:= -g -std=c++11
+CXXFLAGS:= -g -std=c++11 -pedantic -Wall -Wextra -Werror
 CPPFLAGS:= -I include
 SOURCES:= $(wildcard ./src/*.cpp)
 OBJS:= $(patsubst %.cpp, %.o, $(SOURCES))

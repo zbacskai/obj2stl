@@ -47,7 +47,7 @@ namespace obj {
         Eigen::Vector3i median;
         median << medianVertex , medianTexture , medianNormal;
         int prev = 0;
-        for (int curr = 1; curr < surface.getVRefs().size(); ++curr, ++prev)
+        for (unsigned int curr = 1; curr < surface.getVRefs().size(); ++curr, ++prev)
             addSimpleTriangle(surface, tm, &median, prev, curr, 0);
     }
 

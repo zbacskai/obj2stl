@@ -229,7 +229,7 @@ namespace chp {
                     point2poligon.insert(std::pair<point2d, int>(edge.p[0], -1));
                     point2poligon.insert(std::pair<point2d, int>(edge.p[1], -1));
                 }
-                return std::move(point2poligon);
+                return point2poligon;
             }
 
             void precalcPointsToPoligins(std::map<point2d, int, PointCmp> &point2poligon)
@@ -281,7 +281,7 @@ namespace chp {
                     poligons[key]._edges.push_back(edge);
                 }
 
-                return std::move(poligons);
+                return poligons;
             }
 
             void debugPolygons(const std::map<int, Polygon> &poligons) const {
@@ -323,44 +323,49 @@ namespace chp {
         private:
             typedef std::list<edge3d> EdgeList;
             std::vector<EdgeList> _edges;
-            typedef std::list<Polygon> PolygonList;
-            std::vector<PolygonList> _polygons;
 
-            void checkIfEdgeQualifes(const float pointXYZCoord, 
-                                     const int dimIndex,
-                                     const trim::TriangleData& triangle,
-                                     const trim::TriangleData& normals,
-                                     const int triangleIndex,
-                                     int tindex1, int tindex2)
+            void checkIfEdgeCrossesPlane(const float pointXYZCoord, 
+                                         const int dimIndex,
+                                         const trim::TriangleData& triangle,
+                                         const trim::TriangleData& normals,
+                                         const int triangleIndex,
+                                         int triangleVertex1Index, int triangleVertex2Index)
             {
-                float pointXYZMin = std::min(triangle(tindex1, dimIndex), triangle(tindex2, dimIndex));
-                float pointXYZMax= std::max(triangle(tindex1, dimIndex), triangle(tindex2, dimIndex));
+                float pointXYZMin = std::min(triangle(triangleVertex1Index, dimIndex),
+                                             triangle(triangleVertex2Index, dimIndex));
+                float pointXYZMax= std::max(triangle(triangleVertex1Index, dimIndex),
+                                            triangle(triangleVertex2Index, dimIndex));
+
                 if ( pointXYZMin <= pointXYZCoord and pointXYZCoord <= pointXYZMax)
                 {
-                    _edges[dimIndex].push_back({triangle(tindex1), triangle(tindex2), 
-                                                normals(tindex1), normals(tindex2), triangleIndex});
+                    _edges[dimIndex].push_back({triangle(triangleVertex1Index),
+                                                triangle(triangleVertex2Index), 
+                                                normals(triangleVertex1Index),
+                                                normals(triangleVertex2Index),
+                                                triangleIndex});
                 }
             }
                                      
-            void filterOneDimension(const Eigen::RowVector3f& point,
+            void filterTriangleFacesByProjectionPlane(const Eigen::RowVector3f& point,
                                     const int dimIndex,
                                     const trim::TriangleModel& tm)
             {
-                const trim::TriangleModel::ModelMatrix &mv = tm.getVerticleMatrix();
-                const trim::TriangleModel::ModelMatrix &mn = tm.getNormalMatrix();
                 const std::vector<trim::TriangleData> &verticles = tm.getTriangles();
                 const std::vector<trim::TriangleData> &normals = tm.getTriangleNormals();
-                for (int triangleIndex = 0; triangleIndex < verticles.size(); ++triangleIndex) { // check if triangle needs here
+
+                for (unsigned int triangleIndex = 0; triangleIndex < verticles.size(); ++triangleIndex) {
                     const trim::TriangleData& triangle = verticles[triangleIndex];
                     const trim::TriangleData& normal = normals[triangleIndex];
                     
-                    checkIfEdgeQualifes(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 1);
-                    checkIfEdgeQualifes(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 2);
-                    checkIfEdgeQualifes(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 1, 2);
+                    checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 1);
+                    checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 2);
+                    checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 1, 2);
                 }
             }
 
-            bool isPointIn2dProjection(const Eigen::RowVector3f& point, int dimensionIndex, const trim::TriangleModel& tm)
+            bool isPointIn2dProjection(const Eigen::RowVector3f& point,
+                                       int dimensionIndex,
+                                       const trim::TriangleModel& tm) const
             {
                 unsigned int numberOfEdges = _edges[dimensionIndex].size();
                 bool retVal = false;
@@ -385,7 +390,7 @@ namespace chp {
                            const Eigen::RowVector3f& point)
             {
                 for (int i = 0; i < 3; ++i)
-                    filterOneDimension(point, i, tm);
+                    filterTriangleFacesByProjectionPlane(point, i, tm);
 
                 bool ret = false;
                 for (int i = 0; i < 3; ++i)
@@ -396,7 +401,10 @@ namespace chp {
             }
     };
 
-CheckPoint::CheckPoint() : _impl(std::make_shared<CheckPointImpl>()) {};
+CheckPoint::CheckPoint() : _impl(std::make_shared<CheckPointImpl>()) 
+{
+
+}
 
 bool CheckPoint::isInModel(const trim::TriangleModel& tm,
                            const Eigen::RowVector3f& point)

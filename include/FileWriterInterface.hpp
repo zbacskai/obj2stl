@@ -9,7 +9,7 @@ namespace meshconvert {
 
 class FileWriterInterface {
     public:
-        FileWriterInterface(const char* fileName) {}
+        FileWriterInterface(const char*) {}
         virtual void write(const trim::TriangleModel &tm) = 0;
         virtual ~FileWriterInterface() {};
 };

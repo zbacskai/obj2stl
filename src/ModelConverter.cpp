@@ -154,7 +154,7 @@ namespace {
         for(unsigned int i = 1; i < conversionStack.size(); ++i)
             cv *= conversionStack[i]->getMatrix();
 
-        return std::move(cv);
+        return cv;
     }
 }
 
