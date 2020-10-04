@@ -1,5 +1,8 @@
 #!/bin/bash
-set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
 BASEDIR=$(dirname $0)
 BINARY=${BASEDIR}/../../obj-convert
@@ -12,7 +15,6 @@ function test_obj_ascii_conversion {
     TEST_FILES=$(find ${OBJ_FILE_LOCATION} -name '*obj' | sort)
     for FILE in ${TEST_FILES}
     do
-        echo "Testing conversion of obj-file ${FILE} to stl-ascii"
         STL_FILE_CMP=$(echo ${FILE} | sed 's/\.obj/\.stl/g' | sed "s/obj-files/${EXPECTED_FILES_LOCATION}/g")
         STL_FILE_OUT=$(echo ${FILE} | sed 's/\.obj/\.stl/g' | sed "s/obj-files.*\//out\//g")
 
@@ -21,15 +23,17 @@ function test_obj_ascii_conversion {
         RESULT=$(diff ${STL_FILE_CMP} ${STL_FILE_OUT})
         if [ -z "${RESULT}" ]
         then
-          echo "Passed"
+          echo -e "${GREEN}Passed${NC}"
         else
-          echo "Failed"
+          echo -e "${RED}Failed${NC}"
         fi
         done
 }
 
 echo "Running regression tests!"
-echo -e "\nRunning basic stl-ascii conversion..\n\n"
+echo -e "\nRunning basic stl-ascii conversion.\n\n"
 test_obj_ascii_conversion data/obj-files expected-stl-to-ascii stl-ascii
-echo -e "\nRunning basic stl-bin conversion..\n\n"
+echo -e "\nRunning basic stl-bin conversion.\n\n"
 test_obj_ascii_conversion data/obj-files-big expected-stl-to-bin stl-bin
+echo -e "\nRunning basic stl-ascii conversion. - translate\n\n"
+test_obj_ascii_conversion data/obj-files expected-stl-to-ascii-translate stl-ascii '--transformations translation=1.2,3.1,0.0'

@@ -49,6 +49,7 @@ void StlBin::write(const trim::TriangleModel &tm)
     ofile.open (fileName_);
 
     fheader f;
+    std::memset(reinterpret_cast<char*>(&f.data[0]), 0, 80);
     std::strcpy(reinterpret_cast<char*>(&f.data[0]), "binary stl by bacsek");
     f.num_of_triangles = tm.getTriangles().size();
     f.num_of_triangles = htole32(f.num_of_triangles);
