@@ -65,7 +65,8 @@ public:
     unsigned int addTexture(const Eigen::RowVector4f& v);
     unsigned int addNormalVector(const Eigen::RowVector4f& v);
 
-    void applyTransformatioMatrix(const TransFormationMatrix& trMatrix);
+    void applyTransformatioMatrix(const TransFormationMatrix& trMatrix,
+                                  const TransFormationMatrix& trMatrixNormal);
 
     ~TriangleModel();
 };

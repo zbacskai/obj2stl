@@ -157,12 +157,15 @@ unsigned int TriangleModel::addNormalVector(const Eigen::RowVector4f& v)
     return addRow(_normalMatrix, v, _lastIndexNormal);
 }
 
-void TriangleModel::applyTransformatioMatrix(const TransFormationMatrix& trMatrix)
+void TriangleModel::applyTransformatioMatrix(const TransFormationMatrix& trMatrix,
+                                             const TransFormationMatrix& trMatrixNormal)
 {
     ModelMatrix& mv = MatrixManager::instance().getMatrix(_vertexMatrix);
     mv *= trMatrix;
+    ModelMatrix& tx = MatrixManager::instance().getMatrix(_texturesMatrix);
+    tx *= trMatrix;
     ModelMatrix& mn = MatrixManager::instance().getMatrix(_normalMatrix);
-    mn *= trMatrix;
+    mn *= trMatrixNormal;
 }
 
 TriangleModel::~TriangleModel()

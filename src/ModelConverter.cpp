@@ -104,16 +104,23 @@ namespace {
 
     void createConversionMatrix(const std::string& conversionType,
                                 const std::string& paramStr,
-                                mc::ConversionBaseVector &conversionStack)
+                                mc::ConversionBaseVector &conversionStack,
+                                mc::ConversionBaseVector &conversionStackNormals)
     {
         Eigen::RowVector3f v = utils::strCoord2RowVector(paramStr);
                         
         if (conversionType == "scale")
+        {
             conversionStack.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));
+            conversionStackNormals.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));
+        }
         else if (conversionType == "translation")
             conversionStack.push_back(std::make_shared<mc::Translation>(v(0), v(1), v(2)));
         else if (conversionType == "rotate")
+        {
             conversionStack.push_back(std::make_shared<mc::Rotate>(v(0), v(1), v(2)));
+            conversionStackNormals.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));
+        }
         else
         {
             std::stringstream ss;
@@ -123,7 +130,8 @@ namespace {
     }
 
     void buildConversionStack(const std::string& conversionParameters,
-                              mc::ConversionBaseVector &conversionStack)
+                              mc::ConversionBaseVector &conversionStack,
+                              mc::ConversionBaseVector &conversionStackNormals)
     {
         std::stringstream inputfs(conversionParameters);
         std::string convstr;
@@ -136,8 +144,17 @@ namespace {
             while(std::getline(conversionDesc, cDesc, '='))
                 cDescList.push_back(cDesc);
 
-            createConversionMatrix(cDescList[0], cDescList[1], conversionStack);
+            createConversionMatrix(cDescList[0], cDescList[1], conversionStack, conversionStackNormals);
         }
+    }
+
+    Eigen::Matrix4f buildConversionMatrix(const mc::ConversionBaseVector &conversionStack)
+    {
+        Eigen::Matrix4f cv = conversionStack[0]->getMatrix();
+        for(unsigned int i = 1; i < conversionStack.size(); ++i)
+            cv *= conversionStack[i]->getMatrix();
+
+        return std::move(cv);
     }
 }
 
@@ -153,13 +170,13 @@ ModelConverter::ModelConverter(const std::string& conversionParameters) :
 void ModelConverter::convert(trim::TriangleModel &tm)
 {
     mc::ConversionBaseVector conversionStack;
-    buildConversionStack(conversionParameters_, conversionStack);
+    mc::ConversionBaseVector conversionStackNormals;
+    buildConversionStack(conversionParameters_, conversionStack, conversionStackNormals);
 
-    Eigen::Matrix4f cv = conversionStack[0]->getMatrix();
-    for(unsigned int i = 1; i < conversionStack.size(); ++i)
-        cv *= conversionStack[i]->getMatrix();
-
-    tm.applyTransformatioMatrix(cv);
+    Eigen::Matrix4f &&cv = buildConversionMatrix(conversionStack);
+    Eigen::Matrix4f &&cvNormal = buildConversionMatrix(conversionStack);
+    
+    tm.applyTransformatioMatrix(cv, cvNormal);
 }
 
 ModelConverter::~ModelConverter()
