@@ -7,11 +7,21 @@ HEADERS:= $(wildcard ./include/*.hpp)
 OBJS:= $(patsubst %.cpp, %.o, $(SOURCES))
 LDFLAGS:=-lboost_program_options
 
+#ifdef febug_mode
+CPPFLAGS+= -DDEBUG
+#endif
+
 %.o: %.cpp %.hpp
 	g++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
-obj-convert: $(OBJS)
+$(APP): $(OBJS)
 	g++ $(CXXFLAGS) $(CPPFLAGS) $(OBJS) $(LDFLAGS) -o $@
+
+$(APP)-dbg: $(OBJS)
+	g++ $(CXXFLAGS) $(CPPFLAGS) $(OBJS) $(LDFLAGS) -o $@
+
+debug: 
+	make debug_mode=1 $(APP)-dbg
 
 all: $(APP)
 

@@ -1,4 +1,5 @@
 #include <CheckPoint.hpp>
+#include <Logging.hpp>
 #include <TriangleModel.hpp>
 
 #include <eigen3/Eigen/Dense>
@@ -48,7 +49,7 @@ struct edge2dNice {
 
     void print() const
     {
-        std::cout << std::setprecision(12) << directionOfFace << " " << p[0].x << "," << p[0].y << " " << p[1].x << "," << p[1].y << std::endl;
+        debug(std::setprecision(12) << directionOfFace << " " << p[0].x << "," << p[0].y << " " << p[1].x << "," << p[1].y);
     }
 };
 
@@ -62,7 +63,7 @@ struct Polygon {
         for (auto& e : _edges) {
             float carthesian = (e.p[1].x - e.p[0].x)*(y - e.p[0].y) - (e.p[1].y - e.p[0].y) * (x -e.p[0].x);
             bool inside = (carthesian != e.directionOfFace);
-            std::cout << ( inside ? "I " : "O ") << x << "," << y << std::endl;
+            debug(( inside ? "I " : "O ") << x << "," << y);
             retVal |= inside;
         }
         return retVal;
@@ -263,8 +264,8 @@ public:
     void debugPolygons(const std::map<int, Polygon> &poligons) const
     {
         for (auto &poly : poligons) {
-            std::cout << "Polygon: " << poly.first << " <> " << _projectedPlaneIndex << std::endl;
-            std::cout << "------------------------------------------------" << std::endl;
+            debug("Polygon: " << poly.first << " <> " << _projectedPlaneIndex);
+            debug("------------------------------------------------");
             for (auto& pnts : poly.second._edges)
                 pnts.print();
         }
@@ -371,7 +372,7 @@ public:
         for (int i = 0; i < 3; ++i)
             ret ^= isPointIn2dProjection(point, i, tm);
 
-        std::cout << "Point: " << point << " is " <<  (ret ? "inside" : "outside") << std::endl;
+        debug("Point: " << point << " is " <<  (ret ? "inside" : "outside"));
         return ret;
     }
 };
