@@ -10,11 +10,9 @@
 #include <iostream>
 #include <cmath>
 
-namespace mc
-{
+namespace mc {
 
-class ConversionBase
-{
+class ConversionBase {
 protected:
     Eigen::Matrix4f m_;
 public:
@@ -24,8 +22,7 @@ public:
 
 typedef  std::vector<std::shared_ptr<mc::ConversionBase>> ConversionBaseVector;
 
-class Scale : public ConversionBase
-{
+class Scale : public ConversionBase {
 public:
     Scale(float kx, float ky, float kz)
     {
@@ -41,8 +38,7 @@ public:
     };
 };
 
-class Translation : public ConversionBase
-{
+class Translation : public ConversionBase {
 public:
     Translation(float dx, float dy, float dz)
     {
@@ -59,8 +55,7 @@ public:
 
 };
 
-class Rotate : public ConversionBase
-{
+class Rotate : public ConversionBase {
 private:
     static const float pi;
 public:
@@ -107,8 +102,7 @@ public:
 const float Rotate::pi = 3.14159265;
 } // end of namespace mc
 
-namespace
-{
+namespace {
 
 void createConversionMatrix(const std::string& conversionType,
                             const std::string& paramStr,
@@ -117,20 +111,17 @@ void createConversionMatrix(const std::string& conversionType,
 {
     Eigen::RowVector3f v = utils::strCoord2RowVector(paramStr);
 
-    if (conversionType == "scale")
-    {
+    if (conversionType == "scale") {
         conversionStack.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));
         conversionStackNormals.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));
     }
     else if (conversionType == "translation")
         conversionStack.push_back(std::make_shared<mc::Translation>(v(0), v(1), v(2)));
-    else if (conversionType == "rotate")
-    {
+    else if (conversionType == "rotate") {
         conversionStack.push_back(std::make_shared<mc::Rotate>(v(0), v(1), v(2)));
         conversionStackNormals.push_back(std::make_shared<mc::Scale>(v(0), v(1), v(2)));
     }
-    else
-    {
+    else {
         std::stringstream ss;
         ss << "Invalid conversion method: " << conversionType;
         throw ss.str();
@@ -143,8 +134,7 @@ void buildConversionStack(const std::string& conversionParameters,
 {
     std::stringstream inputfs(conversionParameters);
     std::string convstr;
-    while (std::getline(inputfs, convstr, '/'))
-    {
+    while (std::getline(inputfs, convstr, '/')) {
         std::stringstream conversionDesc(convstr);
         std::string cDesc;
         std::vector<std::string> cDescList;
@@ -166,8 +156,7 @@ Eigen::Matrix4f buildConversionMatrix(const mc::ConversionBaseVector &conversion
 }
 }
 
-namespace mc
-{
+namespace mc {
 
 
 ModelConverter::ModelConverter(const std::string& conversionParameters) :

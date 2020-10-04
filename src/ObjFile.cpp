@@ -6,8 +6,7 @@
 
 #include<TriangleModel.hpp>
 
-namespace obj
-{
+namespace obj {
 
 ObjFile::ObjFile(const char* fileName) :
     FileReaderInterface(fileName),
@@ -25,8 +24,7 @@ Eigen::RowVector4f ObjFile::calculateMedian(const trim::TriangleModel::ModelMatr
     float sumX = 0;
     float sumY = 0;
     float sumZ = 0;
-    for (auto r : refs)
-    {
+    for (auto r : refs) {
         total+=1.0;
         sumX += m(r,0);
         sumY += m(r,1);
@@ -92,8 +90,7 @@ void ObjFile::convertToTriangles(const Surface& surface,  trim::TriangleModel& t
         add2Triangles(surface, tm);
     else if (numberOfVerticles > 4)
         addMultiTriangle(surface, tm);
-    else
-    {
+    else {
         std::stringstream ss;
         ss << "Something wrong. Can't consturct urface from. " <<
            numberOfVerticles;
@@ -120,8 +117,7 @@ trim::TriangleModel& ObjFile::parse(trim::TriangleModel& tm)
 {
     std::ifstream infile(_fileName);
     std::string line;
-    while (std::getline(infile, line))
-    {
+    while (std::getline(infile, line)) {
         std::istringstream iss(line);
         std::string infoType;
         iss >> infoType;
@@ -132,8 +128,7 @@ trim::TriangleModel& ObjFile::parse(trim::TriangleModel& tm)
                 processSurface("f", infoType, iss))
             continue;
     }
-    for (auto s : _surfaces)
-    {
+    for (auto s : _surfaces) {
         convertToTriangles(*s, tm);
     }
     return tm;

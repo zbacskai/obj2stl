@@ -19,7 +19,7 @@ check:
 	cppclean --verbose .
 
 style:
-	astyle --style=allman $(SOURCES) $(HEADERS)
+	astyle --style=stroustrup $(SOURCES) $(HEADERS)
 
 clean:
 	rm -rf src/*.o

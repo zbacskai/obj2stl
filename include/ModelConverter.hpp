@@ -4,16 +4,13 @@
 
 #include <string>
 
-namespace trim
-{
+namespace trim {
 class TriangleModel;
 }
 
-namespace mc
-{
+namespace mc {
 
-class ModelConverter
-{
+class ModelConverter {
 private:
     std::string conversionParameters_;
 public:

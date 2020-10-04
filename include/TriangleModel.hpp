@@ -7,14 +7,12 @@
 #include <algorithm>
 #include <eigen3/Eigen/Dense>
 
-namespace trim
-{
+namespace trim {
 
 typedef int32_t VertexRef;
 typedef uint16_t MatrixSelector;
 
-class TriangleData
-{
+class TriangleData {
 private:
     VertexRef _vertex[3];
     uint16_t _matrixSelector;
@@ -30,8 +28,7 @@ public:
     float operator()(int vertexIndex, int coordinate) const;
 };
 
-class TriangleModel
-{
+class TriangleModel {
 private:
     MatrixSelector _vertexMatrix;
     MatrixSelector _texturesMatrix;

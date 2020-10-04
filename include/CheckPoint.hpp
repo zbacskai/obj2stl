@@ -5,13 +5,11 @@
 #include <TriangleModel.hpp>
 #include <Utils.hpp>
 
-namespace chp
-{
+namespace chp {
 
 class CheckPointImpl;
 
-class CheckPoint
-{
+class CheckPoint {
 private:
     std::shared_ptr<CheckPointImpl> _impl;
 public:

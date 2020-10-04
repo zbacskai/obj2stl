@@ -7,8 +7,7 @@
 #include <string>
 #include <iostream>
 
-namespace obj
-{
+namespace obj {
 
 std::istream& operator>>( std::istream  &input, GeometricVertex &v )
 {
@@ -55,8 +54,7 @@ const std::vector<int>& Surface::getVnRefs() const
 
 void Surface::makeRefsAbsolute(int vCount, int tvCount, int vnCount)
 {
-    for (unsigned int i = 0; i < vRefs_.size(); ++i)
-    {
+    for (unsigned int i = 0; i < vRefs_.size(); ++i) {
         if (vRefs_[i] < 0 and vCount > 0)
             vRefs_[i] += vCount;
 
@@ -81,22 +79,19 @@ void Surface::makeRefsAbsolute(int vCount, int tvCount, int vnCount)
 std::istream &operator>>( std::istream  &input, Surface &s )
 {
     std::string vertexRef;
-    while (std::getline(input, vertexRef, ' '))
-    {
+    while (std::getline(input, vertexRef, ' ')) {
         std::stringstream ss(vertexRef);
         std::string tok;
 
         int metIndex=0;
         int out_val[3] = {0,0,0};
-        while (std::getline(ss, tok, '/') and metIndex <3)
-        {
+        while (std::getline(ss, tok, '/') and metIndex <3) {
             if (tok != "")
                 out_val[metIndex] = std::atoi((tok).c_str());
             ++metIndex;
         }
 
-        if (out_val[0] > 0)
-        {
+        if (out_val[0] > 0) {
             s.vRefs_.push_back(out_val[0]);
             s.tvRefs_.push_back(out_val[1]);
             s.vnRefs_.push_back(out_val[2]);

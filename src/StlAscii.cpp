@@ -7,14 +7,12 @@
 
 #include <arpa/inet.h>
 
-namespace
-{
+namespace {
 
 void writeVertex(const trim::TriangleData& triangle,
                  std::ofstream& ofile)
 {
-    for (int i = 0; i < 3; ++i)
-    {
+    for (int i = 0; i < 3; ++i) {
         ofile << "        vertex ";
         ofile << triangle(i, 0) << " ";
         ofile << triangle(i, 1) << " ";
@@ -43,10 +41,8 @@ void writeTriangle(const trim::TriangleData& triangle,
 }
 }
 
-namespace stl
-{
-namespace ascii
-{
+namespace stl {
+namespace ascii {
 
 StlAscii::StlAscii(const char* fileName) : meshconvert::FileWriterInterface(fileName), fileName_(fileName)
 {

@@ -20,24 +20,20 @@
 
 #include <TriangleModel.hpp>
 
-namespace chp
-{
+namespace chp {
 
-struct edge3d
-{
+struct edge3d {
     trim::VertexRef _e[2];
     trim::VertexRef _n[2];
     int index_;
 };
 
-struct point2d
-{
+struct point2d {
     float x;
     float y;
 };
 
-struct PointCmp
-{
+struct PointCmp {
     bool operator ()(const point2d &a, const point2d &b)
     {
         if (a.x < b.x)
@@ -48,14 +44,12 @@ struct PointCmp
 };
 
 
-struct edge2d
-{
+struct edge2d {
     std::set<point2d, PointCmp> p;
     point2d nc;
 };
 
-struct edge2dNice
-{
+struct edge2dNice {
     point2d p[2];
     float directionOfFace;
 
@@ -65,16 +59,14 @@ struct edge2dNice
     }
 };
 
-struct Polygon
-{
+struct Polygon {
     int _poligonIndex;
     std::vector<edge2dNice> _edges;
 
     bool pointInPolygon(float x, float y) const
     {
         bool retVal = false;
-        for (auto& e : _edges)
-        {
+        for (auto& e : _edges) {
             float carthesian = (e.p[1].x - e.p[0].x)*(y - e.p[0].y) - (e.p[1].y - e.p[0].y) * (x -e.p[0].x);
             bool inside = (carthesian != e.directionOfFace);
             std::cout << ( inside ? "I " : "O ") << x << "," << y << std::endl;
@@ -84,8 +76,7 @@ struct Polygon
     }
 };
 
-class PolygonMaster
-{
+class PolygonMaster {
 private:
     unsigned int _amountOfEdges;
     int _projectedPlaneIndex;
@@ -119,8 +110,7 @@ public:
         _p01xp02()
     {
         float p = planeCoordinate;
-        switch(projectedPlaneIndex)
-        {
+        switch(projectedPlaneIndex) {
         case 0: // X
             _plane <<   p,   p,   p,
                    0.0, 1.0, 0.0,
@@ -146,11 +136,9 @@ public:
         unsigned int columnNumber = 0;
         const trim::TriangleModel::ModelMatrix &mm = tm.getVerticleMatrix();
         const trim::TriangleModel::ModelMatrix &nm = tm.getNormalMatrix();
-        for (auto& edge: edges)
-        {
+        for (auto& edge: edges) {
             _indexes[columnNumber] = edge.index_;
-            for (int i = 0; i < 3; ++i)
-            {
+            for (int i = 0; i < 3; ++i) {
                 _ia(i, columnNumber) = mm(edge._e[0], i);
                 _ib(i, columnNumber) = mm(edge._e[1], i);
                 _na(i, columnNumber) = nm(edge._n[0], i);
@@ -173,8 +161,7 @@ public:
             _2dEdges.insert(std::pair<int, edge2d>(edgeId, edge2d()));
 
         edge2d& edge = _2dEdges[edgeId];
-        if (edge.p.size() == 0)
-        {
+        if (edge.p.size() == 0) {
             edge.nc.x = normal(dimMapX[_projectedPlaneIndex]);
             edge.nc.y = normal(dimMapY[_projectedPlaneIndex]);
         }
@@ -186,11 +173,9 @@ public:
 
     void calculate2dEdges()
     {
-        for (unsigned int colIndex = 0; colIndex < _amountOfEdges; ++colIndex)
-        {
+        for (unsigned int colIndex = 0; colIndex < _amountOfEdges; ++colIndex) {
             float det = _determinants(0, colIndex);
-            if (det != 0.0) // shall never be in our case as we prefilter...
-            {
+            if (det != 0.0) { // shall never be in our case as we prefilter...
                 float t = _p01xp02 * (_ia.col(colIndex) - _plane.col(0));
                 t/=det;
                 Eigen::Vector3f point = _ia.col(colIndex) + (_ia_b.col(colIndex)*t);
@@ -203,13 +188,11 @@ public:
 
     void convertEdges2NicerForm()
     {
-        for (auto& edge : _2dEdges)
-        {
+        for (auto& edge : _2dEdges) {
             edge2dNice en;
             unsigned int i = 0;
             // add the points in order x < y.
-            for (auto& pnts : edge.second.p)
-            {
+            for (auto& pnts : edge.second.p) {
                 en.p[i] = pnts;
                 ++i;
             }
@@ -234,8 +217,7 @@ public:
     std::map<point2d, int, PointCmp> initialisePointMap()
     {
         std::map<point2d, int, PointCmp> point2poligon;
-        for (auto& edge : _2dedgesNice)
-        {
+        for (auto& edge : _2dedgesNice) {
             point2poligon.insert(std::pair<point2d, int>(edge.p[0], -1));
             point2poligon.insert(std::pair<point2d, int>(edge.p[1], -1));
         }
@@ -245,18 +227,15 @@ public:
     void precalcPointsToPoligins(std::map<point2d, int, PointCmp> &point2poligon)
     {
         unsigned int pIndex = 0;
-        for (auto& edge : _2dedgesNice)
-        {
+        for (auto& edge : _2dedgesNice) {
             int p1 = point2poligon[edge.p[0]];
             int p2 = point2poligon[edge.p[1]];
             int pMax = std::max(p1, p2);
-            if (pMax >=0)
-            {
+            if (pMax >=0) {
                 point2poligon[edge.p[0]] = pMax;
                 point2poligon[edge.p[1]] = pMax;
             }
-            else
-            {
+            else {
                 point2poligon[edge.p[0]] = pIndex;
                 point2poligon[edge.p[1]] = pIndex;
                 pIndex++;
@@ -268,15 +247,12 @@ public:
     {
         std::map<int, Polygon> poligons;
         bool mergeDone = true;
-        while(mergeDone)
-        {
+        while(mergeDone) {
             mergeDone = false;
-            for (auto& edge : _2dedgesNice)
-            {
+            for (auto& edge : _2dedgesNice) {
                 int pi1 = point2poligon[edge.p[0]];
                 int pi2 = point2poligon[edge.p[1]];
-                if (pi1 != pi2)
-                {
+                if (pi1 != pi2) {
                     mergeDone = true;
                     int pMax = std::max(pi1, pi2);
                     point2poligon[edge.p[0]] = pMax;
@@ -285,8 +261,7 @@ public:
             }
         }
 
-        for (auto& edge : _2dedgesNice)
-        {
+        for (auto& edge : _2dedgesNice) {
             int key = point2poligon[edge.p[0]];
             poligons[key]._edges.push_back(edge);
         }
@@ -296,8 +271,7 @@ public:
 
     void debugPolygons(const std::map<int, Polygon> &poligons) const
     {
-        for (auto &poly : poligons)
-        {
+        for (auto &poly : poligons) {
             std::cout << "Polygon: " << poly.first << " <> " << _projectedPlaneIndex << std::endl;
             std::cout << "------------------------------------------------" << std::endl;
             for (auto& pnts : poly.second._edges)
@@ -331,8 +305,7 @@ public:
 const int PolygonMaster::dimMapX[3] = {1, 0, 0};
 const int PolygonMaster::dimMapY[3] = {2, 2, 1};
 
-class CheckPointImpl
-{
+class CheckPointImpl {
 private:
     typedef std::list<edge3d> EdgeList;
     std::vector<EdgeList> _edges;
@@ -349,8 +322,7 @@ private:
         float pointXYZMax= std::max(triangle(triangleVertex1Index, dimIndex),
                                     triangle(triangleVertex2Index, dimIndex));
 
-        if ( pointXYZMin <= pointXYZCoord and pointXYZCoord <= pointXYZMax)
-        {
+        if ( pointXYZMin <= pointXYZCoord and pointXYZCoord <= pointXYZMax) {
             _edges[dimIndex].push_back({triangle(triangleVertex1Index),
                                         triangle(triangleVertex2Index),
                                         normals(triangleVertex1Index),
@@ -366,8 +338,7 @@ private:
         const std::vector<trim::TriangleData> &verticles = tm.getTriangles();
         const std::vector<trim::TriangleData> &normals = tm.getTriangleNormals();
 
-        for (unsigned int triangleIndex = 0; triangleIndex < verticles.size(); ++triangleIndex)
-        {
+        for (unsigned int triangleIndex = 0; triangleIndex < verticles.size(); ++triangleIndex) {
             const trim::TriangleData& triangle = verticles[triangleIndex];
             const trim::TriangleData& normal = normals[triangleIndex];
 
@@ -383,12 +354,10 @@ private:
     {
         unsigned int numberOfEdges = _edges[dimensionIndex].size();
         bool retVal = false;
-        if (numberOfEdges > 0)
-        {
+        if (numberOfEdges > 0) {
             PolygonMaster p(_edges[dimensionIndex].size(), dimensionIndex, point(dimensionIndex));
             std::map<int, Polygon>  &&poligons = p.getPolygons(_edges[dimensionIndex], tm);
-            for (auto& poly : poligons)
-            {
+            for (auto& poly : poligons) {
                 retVal |= p.checkPointInPoligon(point, poly.second);
             }
         }

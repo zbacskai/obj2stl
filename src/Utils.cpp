@@ -1,7 +1,6 @@
 #include <Utils.hpp>
 
-namespace utils
-{
+namespace utils {
 
 Eigen::RowVector3f strCoord2RowVector(const std::string& iStr)
 {

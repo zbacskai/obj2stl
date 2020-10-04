@@ -4,12 +4,10 @@
 
 #include<TriangleModel.hpp>
 
-namespace meshconvert
-{
+namespace meshconvert {
 
 
-class FileWriterInterface
-{
+class FileWriterInterface {
 public:
     FileWriterInterface(const char*) {}
     virtual void write(const trim::TriangleModel &tm) = 0;

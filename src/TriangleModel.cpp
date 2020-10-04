@@ -7,12 +7,10 @@
 
 #include <iostream>
 
-namespace trim
-{
+namespace trim {
 
 template <class T>
-struct Singleton
-{
+struct Singleton {
     static T& instance()
     {
         static T t;
@@ -20,8 +18,7 @@ struct Singleton
     }
 };
 
-class MatrixManager : public Singleton <MatrixManager>
-{
+class MatrixManager : public Singleton <MatrixManager> {
 private:
     std::vector<MatrixSelector> _matrixReturned;
     std::vector<std::shared_ptr<TriangleModel::ModelMatrix>> _matrixes;
@@ -36,8 +33,7 @@ MatrixSelector MatrixManager::allocateNewMatrix()
 {
     unsigned mRows=1048576;
     unsigned mCols=4;
-    if (_matrixReturned.empty())
-    {
+    if (_matrixReturned.empty()) {
         if (std::numeric_limits<MatrixSelector>::max() == _matrixes.size())
             throw exception::GenericException("No more slots left for Model Matrixes");
 

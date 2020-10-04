@@ -14,8 +14,7 @@
 
 namespace po = boost::program_options;
 
-class FileFactory
-{
+class FileFactory {
 public:
     static std::shared_ptr<meshconvert::FileReaderInterface> getFileReader(
         const std::string &iFormat, const std::string &iFileName)
@@ -73,15 +72,13 @@ int main(int argc, char* argv[])
             or not vm.count("iff")
             or not vm.count("if")
             or not vm.count("off")
-            or not vm.count("of"))
-    {
+            or not vm.count("of")) {
         std::cout << "usage: " << argv[0] << " <input file format> <input file> <output file format> <output file>" <<std::endl;
         std::cout << desc << "\n";
         return 1;
     }
 
-    try
-    {
+    try {
 
         std::shared_ptr<meshconvert::FileReaderInterface> fr =
             FileFactory::getFileReader(vm["iff"].as<std::string>(),
@@ -93,21 +90,18 @@ int main(int argc, char* argv[])
 
         trim::TriangleModel tm;
         fr->parse(tm);
-        if (transformationOptions != "")
-        {
+        if (transformationOptions != "") {
             mc::ModelConverter mc(transformationOptions);
             mc.convert(tm);
         }
-        if (pointInside != "")
-        {
+        if (pointInside != "") {
             chp::CheckPoint c;
             c.isInModel(tm, utils::strCoord2RowVector(pointInside));
         }
         else
             fw->write(tm);
     }
-    catch (std::string& e)
-    {
+    catch (std::string& e) {
         std::cout << e << std::endl;
     }
 

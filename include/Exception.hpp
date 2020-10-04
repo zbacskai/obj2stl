@@ -4,11 +4,9 @@
 
 #include <string>
 
-namespace exception
-{
+namespace exception {
 
-class GenericException
-{
+class GenericException {
 private:
     std::string _s;
 public:

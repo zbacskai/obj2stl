@@ -4,12 +4,10 @@
 
 #include<TriangleModel.hpp>
 
-namespace meshconvert
-{
+namespace meshconvert {
 
 
-class FileReaderInterface
-{
+class FileReaderInterface {
 public:
     FileReaderInterface(const char*) {}
     virtual trim::TriangleModel& parse(trim::TriangleModel &tm) = 0;
