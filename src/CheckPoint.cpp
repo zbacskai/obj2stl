@@ -1,24 +1,17 @@
 #include <CheckPoint.hpp>
+#include <TriangleModel.hpp>
+
 #include <eigen3/Eigen/Dense>
 
 #include <iostream>
-#include <algorithm>
 #include <sstream>
 #include <iomanip>
-#include <vector>
 
 #include <list>
-
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-
-#include<Exception.hpp>
-
-#include <cmath>
+#include <map>
 #include <set>
+#include <vector>
 
-#include <TriangleModel.hpp>
 
 namespace chp {
 
@@ -196,9 +189,7 @@ public:
                 en.p[i] = pnts;
                 ++i;
             }
-            //Calculate a direction :-)
-            //float carthesian = (en.p[1].x - en.p[0].x)*(edge.second.nc.y - en.p[0].y) - (en.p[1].y - en.p[0].y) * (edge.second.nc.x -en.p[0].x);
-            // Use this formula here as the normals seem to be 0 centered.
+            //Calculate a direction
             float carthesian = (en.p[1].x - en.p[0].x)*edge.second.nc.y - (en.p[1].y - en.p[0].y) * edge.second.nc.x;
             en.directionOfFace =  carthesian > 0 ? 1.0 :
                                   (carthesian == 0 ? 0.0 : -1.0);
