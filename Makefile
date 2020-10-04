@@ -1,7 +1,7 @@
 APP:=obj-convert
 SRC_DIR:=./src
 CXXFLAGS:= -g -std=c++11 -pedantic -Wall -Wextra -Werror
-CPPFLAGS:= -I include
+CPPFLAGS:= -I include -I src
 SOURCES:= $(wildcard ./src/*.cpp)
 HEADERS:= $(wildcard ./include/*.hpp)
 OBJS:= $(patsubst %.cpp, %.o, $(SOURCES))
