@@ -1,6 +1,10 @@
-#
 #ifndef StlBin_hpp
 #define StlBin_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  * 
+  **/
 
 #include <FileWriterInterface.hpp>
 #include <string>

@@ -1,3 +1,8 @@
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 #include<CheckPointImpl.hpp>
 #include <Logging.hpp>
 

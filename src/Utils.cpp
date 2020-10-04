@@ -1,3 +1,8 @@
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 #include <Utils.hpp>
 
 namespace utils {

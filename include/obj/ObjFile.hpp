@@ -1,6 +1,10 @@
-#
 #ifndef ObjFile_hpp
 #define ObjFile_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  * 
+  **/
 
 #include <string>
 #include <vector>

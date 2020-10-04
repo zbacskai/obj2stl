@@ -1,6 +1,10 @@
-#
 #ifndef StlAscii_hpp
 #define StlAscii_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  * 
+  **/
 
 #include <FileWriterInterface.hpp>
 #include <string>

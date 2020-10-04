@@ -1,3 +1,8 @@
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 #include <ModelConverter.hpp>
 #include <TriangleModel.hpp>
 #include <Utils.hpp>

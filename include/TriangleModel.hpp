@@ -1,6 +1,10 @@
-#
 #ifndef TriangleModel_hpp
 #define TriangleModel_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 
 #include <vector>
 #include <memory>

@@ -1,5 +1,10 @@
 #ifndef Logging_hpp
 #define Logging_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 
 #include <iostream>
 

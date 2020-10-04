@@ -1,3 +1,8 @@
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 #include <stl/StlAscii.hpp>
 
 #include<iostream>

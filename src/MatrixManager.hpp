@@ -1,5 +1,10 @@
 #ifndef MatrixManager_hpp
 #define MatrixManager_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  * 
+  **/
 
 #include <TriangleModel.hpp>
 

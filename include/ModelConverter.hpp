@@ -1,6 +1,10 @@
-#
 #ifndef ModelConverter_hpp
 #define ModelConverter_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 
 #include <string>
 

@@ -1,6 +1,10 @@
-#
 #ifndef CheckPoint_hpp
 #define CheckPoint_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 
 #include <TriangleModel.hpp>
 #include <Utils.hpp>

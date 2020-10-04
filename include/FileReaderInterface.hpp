@@ -1,6 +1,10 @@
-#
 #ifndef FileReaderInterface_hpp
 #define FileReaderInterface_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 
 #include<TriangleModel.hpp>
 

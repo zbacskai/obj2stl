@@ -1,3 +1,8 @@
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 #include <obj/ObjFile.hpp>
 #include <obj/VertexData.hpp>
 

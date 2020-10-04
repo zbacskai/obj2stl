@@ -1,3 +1,8 @@
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  * 
+  **/
 #ifndef CheckPointImpl_hpp
 #define CheckPointImpl_hpp
 #include <CheckPoint.hpp>

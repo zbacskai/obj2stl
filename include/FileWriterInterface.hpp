@@ -1,6 +1,10 @@
-#
 #ifndef FileWriterInterface_hpp
 #define FileWriterInterface_hpp
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  *
+  **/
 
 #include<TriangleModel.hpp>
 

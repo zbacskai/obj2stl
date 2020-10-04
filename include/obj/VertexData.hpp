@@ -1,7 +1,11 @@
-#
 #ifndef VertexData_hpp
 #define vertexData_hpp
-
+/**
+  *
+  * Copyright 2020 Zoltan Bacskai
+  * 
+  **/
+ 
 #include <iostream>
 #include <iomanip>
 #include <vector>
