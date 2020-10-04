@@ -4,7 +4,7 @@ BASEDIR=$(dirname $0)
 
 function run_regression {
     echo "Running regression tests"
-    ${BASEDIR}/regression/run-regression-test.sh
+    cd ${BASEDIR}/regression && ./run-regression-test.sh
 }
 
 function run_unit {
