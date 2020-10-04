@@ -61,6 +61,19 @@ namespace chp {
     struct Polygon {
         int _poligonIndex;
         std::vector<edge2dNice> _edges;
+
+        bool pointInPolygon(float x, float y) const
+        {
+            bool retVal = false;
+            for (auto& e : _edges)
+            {
+                float carthesian = (e.p[1].x - e.p[0].x)*(y - e.p[0].y) - (e.p[1].y - e.p[0].y) * (x -e.p[0].x);
+                bool inside = (carthesian != e.directionOfFace);
+                std::cout << ( inside ? "I " : "O ") << x << "," << y << std::endl;
+                retVal |= inside;
+            }
+            return retVal;
+        }
     };
 
     class PolygonMaster {
@@ -281,19 +294,27 @@ namespace chp {
                 }
             }
 
-            void calculatePolygons() {
+            std::map<int, Polygon> calculatePolygons() {
                 std::map<point2d, int, PointCmp> &&point2poligon = initialisePointMap();
                 precalcPointsToPoligins(point2poligon);
                 std::map<int, Polygon> &&poligons = clusterPointsToFinalPoligons(point2poligon);
                 debugPolygons(poligons);
+                return std::move(poligons);
             }
 
-            void getPolygons(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
+            std::map<int, Polygon> getPolygons(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
             {
                 projectEdges(edges, tm);
-                calculatePolygons();
+                return std::move(calculatePolygons());
             }
-    };
+
+            bool checkPointInPoligon(const Eigen::RowVector3f& point, const Polygon &poly) const
+            {
+                float x = point(dimMapX[_projectedPlaneIndex]);
+                float y = point(dimMapY[_projectedPlaneIndex]);
+                return poly.pointInPolygon(x, y);
+            }
+    }; // end of PolygonMaster
 
     const int PolygonMaster::dimMapX[3] = {1, 0, 0};
     const int PolygonMaster::dimMapY[3] = {2, 2, 1};
@@ -339,25 +360,22 @@ namespace chp {
                 }
             }
 
-            void calculate2DPolygons(const Eigen::RowVector3f& point, int dimensionIndex, const trim::TriangleModel& tm)
+            bool isPointIn2dProjection(const Eigen::RowVector3f& point, int dimensionIndex, const trim::TriangleModel& tm)
             {
                 unsigned int numberOfEdges = _edges[dimensionIndex].size();
+                bool retVal = false;
                 if (numberOfEdges > 0)
                 {
                     PolygonMaster p(_edges[dimensionIndex].size(), dimensionIndex, point(dimensionIndex));
-                    p.getPolygons(_edges[dimensionIndex], tm);
+                    std::map<int, Polygon>  &&poligons = p.getPolygons(_edges[dimensionIndex], tm);
+                    for (auto& poly : poligons)
+                    {
+                        retVal |= p.checkPointInPoligon(point, poly.second);
+                    }
                 }
+                return retVal;
             }
 
-            void filterEdgesByPlanes(const trim::TriangleModel& tm,
-                                     const Eigen::RowVector3f& point)
-            {
-                for (int i = 0; i < 3; ++i)
-                    filterOneDimension(point, i, tm);
-
-                for (int i = 0; i < 3; ++i)
-                    calculate2DPolygons(point, i, tm);
-            }
         public:
 
             CheckPointImpl() : _edges(3) {
@@ -366,8 +384,15 @@ namespace chp {
             bool isInModel(const trim::TriangleModel& tm,
                            const Eigen::RowVector3f& point)
             {
-                filterEdgesByPlanes(tm,point);
-                return true;
+                for (int i = 0; i < 3; ++i)
+                    filterOneDimension(point, i, tm);
+
+                bool ret = false;
+                for (int i = 0; i < 3; ++i)
+                    ret ^= isPointIn2dProjection(point, i, tm);
+
+                std::cout << "Point: " << point << " is " <<  (ret ? "inside" : "outside") << std::endl;
+                return ret;
             }
     };
 
