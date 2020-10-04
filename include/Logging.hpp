@@ -2,9 +2,6 @@
 #define Logging_hpp
 
 #include <iostream>
-#include <chrono>
-#include <iomanip>
-#include <ctime>   
 
 namespace logging {
     std::string getCurrentTimestamp();
