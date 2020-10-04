@@ -52,9 +52,10 @@ namespace chp {
     struct edge2dNice {
         point2d p[2];
         float directionOfFace;
+        int polyIndex;
 
         void print() const {
-            std::cout << directionOfFace << " " << p[0].x << "," << p[0].y << " " << p[1].x << "," << p[1].y << std::endl;
+            std::cout << polyIndex << " " << p[0].x << "," << p[0].y << " " << p[1].x << "," << p[1].y << std::endl;
         }
     };
 
@@ -209,31 +210,36 @@ namespace chp {
                 std::vector<Polygon> poligons;
                 std::map<point2d, int, PointCmp> point2poligon; 
                 bool mergeDone = true;
+                unsigned int pIndex = 0;
                 for (auto& edge : _2dedgesNice)
                 {
-                    const auto itA = point2poligon.find(edge.p[0]);
-                    const auto itB = point2poligon.find(edge.p[1]);
+                    std::map<point2d, int, PointCmp>::const_iterator itA = point2poligon.find(edge.p[0]);
+                    std::map<point2d, int, PointCmp>::const_iterator itB = point2poligon.find(edge.p[1]);
 
                     if (itA == point2poligon.end() and
                         itB == point2poligon.end())
                     {
-                        point2poligon.insert(std::pair<point2d, int>(edge.p[0], poligons.size()));
-                        point2poligon.insert(std::pair<point2d, int>(edge.p[1], poligons.size()));
+                        point2poligon.insert(std::pair<point2d, int>(edge.p[0], pIndex));
+                        point2poligon.insert(std::pair<point2d, int>(edge.p[1], pIndex));
                         Polygon poly;
-                        poly._poligonIndex = poligons.size();
+                        poly._poligonIndex = pIndex;
+                        edge.polyIndex = pIndex;
                         poly._edges.push_back(edge);
                         poligons.push_back(poly);
+                        ++pIndex;
                     }
                     else if (itA == point2poligon.end())
                     {
                         int polyIndexB = itB->second;
                         point2poligon.insert(std::pair<point2d, int>(edge.p[0], polyIndexB));
+                        edge.polyIndex = polyIndexB;
                         poligons[polyIndexB]._edges.push_back(edge);
                     }
                     else if (itB == point2poligon.end())
                     {
                         int polyIndexA = itA->second;
                         point2poligon.insert(std::pair<point2d, int>(edge.p[1], polyIndexA));
+                        edge.polyIndex = polyIndexA;
                         poligons[polyIndexA]._edges.push_back(edge);
                     }
                     else
