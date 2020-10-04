@@ -3,14 +3,16 @@
 #include <Exception.hpp>
 
 #include <memory>
-#include <limits> 
+#include <limits>
 
 #include <iostream>
 
-namespace trim {
+namespace trim
+{
 
 template <class T>
-struct Singleton {
+struct Singleton
+{
     static T& instance()
     {
         static T t;
@@ -18,15 +20,16 @@ struct Singleton {
     }
 };
 
-class MatrixManager : public Singleton <MatrixManager> {
-    private:
-        std::vector<MatrixSelector> _matrixReturned;
-        std::vector<std::shared_ptr<TriangleModel::ModelMatrix>> _matrixes;
-    public:
-        MatrixManager() {};
-        MatrixSelector allocateNewMatrix();
-        void releaseMatrix(MatrixSelector m);
-        TriangleModel::ModelMatrix& getMatrix(MatrixSelector m);
+class MatrixManager : public Singleton <MatrixManager>
+{
+private:
+    std::vector<MatrixSelector> _matrixReturned;
+    std::vector<std::shared_ptr<TriangleModel::ModelMatrix>> _matrixes;
+public:
+    MatrixManager() {};
+    MatrixSelector allocateNewMatrix();
+    void releaseMatrix(MatrixSelector m);
+    TriangleModel::ModelMatrix& getMatrix(MatrixSelector m);
 };
 
 MatrixSelector MatrixManager::allocateNewMatrix()
@@ -41,7 +44,7 @@ MatrixSelector MatrixManager::allocateNewMatrix()
         _matrixes.push_back(std::make_shared<TriangleModel::ModelMatrix>(mRows, mCols));
         return (_matrixes.size() - 1);
     }
-    
+
     MatrixSelector m = _matrixReturned.back();
     _matrixes[m] = std::make_shared<TriangleModel::ModelMatrix>(mRows, mCols);
     _matrixReturned.pop_back();
@@ -52,7 +55,7 @@ void MatrixManager::releaseMatrix(MatrixSelector m)
 {
     if (not (m < _matrixes.size()))
         throw exception::GenericException("Index out of range while trying too release a Model Matrix");
-    
+
     _matrixReturned.push_back(m);
     _matrixes[m].reset();
 }
@@ -83,7 +86,7 @@ TriangleModel::ModelMatrix& MatrixManager::getMatrix(MatrixSelector m)
 }
 
 TriangleModel::TriangleModel() : _vertexMatrix(0), _texturesMatrix(0), _normalMatrix(0),
-                                 _lastIndexVertex(0), _lastIndexTexture(0), _lastIndexNormal(0)
+    _lastIndexVertex(0), _lastIndexTexture(0), _lastIndexNormal(0)
 {
     _vertexMatrix = MatrixManager::instance().allocateNewMatrix();
     _texturesMatrix = MatrixManager::instance().allocateNewMatrix();
@@ -96,7 +99,7 @@ unsigned int TriangleModel::addRow(MatrixSelector m, const Eigen::RowVector4f& v
     if (lastIndex >= mm.rows())
         mm.conservativeResize(mm.rows() * 1.5, mm.cols());
 
-    mm.row(lastIndex) = v;  
+    mm.row(lastIndex) = v;
     return lastIndex++;
 }
 
@@ -111,7 +114,7 @@ void TriangleModel::addTriangle(const TriangleData& triangle,
     _triangleNormals.push_back(triangleNormals);
     _triangleNormals.back()._matrixSelector = _normalMatrix;
 }
-    
+
 const std::vector<TriangleData>& TriangleModel::getTriangles() const
 {
     return _triangles;
@@ -136,7 +139,7 @@ const TriangleModel::ModelMatrix& TriangleModel::getTextureMatrix() const
 {
     return MatrixManager::instance().getMatrix(_texturesMatrix);
 }
-    
+
 const TriangleModel::ModelMatrix& TriangleModel::getNormalMatrix() const
 {
     return MatrixManager::instance().getMatrix(_normalMatrix);
@@ -158,7 +161,7 @@ unsigned int TriangleModel::addNormalVector(const Eigen::RowVector4f& v)
 }
 
 void TriangleModel::applyTransformatioMatrix(const TransFormationMatrix& trMatrix,
-                                             const TransFormationMatrix& trMatrixNormal)
+        const TransFormationMatrix& trMatrixNormal)
 {
     ModelMatrix& mv = MatrixManager::instance().getMatrix(_vertexMatrix);
     mv *= trMatrix;

@@ -20,388 +20,403 @@
 
 #include <TriangleModel.hpp>
 
-namespace chp {
+namespace chp
+{
 
-    struct edge3d {
-        trim::VertexRef _e[2];
-        trim::VertexRef _n[2];
-        int index_;
-    };
+struct edge3d
+{
+    trim::VertexRef _e[2];
+    trim::VertexRef _n[2];
+    int index_;
+};
 
-    struct point2d {
-        float x;
-        float y;
-    };
+struct point2d
+{
+    float x;
+    float y;
+};
 
-    struct PointCmp{
-        bool operator ()(const point2d &a, const point2d &b)
+struct PointCmp
+{
+    bool operator ()(const point2d &a, const point2d &b)
+    {
+        if (a.x < b.x)
+            return true;
+
+        return (a.x == b.x and a.y < b.y);
+    }
+};
+
+
+struct edge2d
+{
+    std::set<point2d, PointCmp> p;
+    point2d nc;
+};
+
+struct edge2dNice
+{
+    point2d p[2];
+    float directionOfFace;
+
+    void print() const
+    {
+        std::cout << std::setprecision(12) << directionOfFace << " " << p[0].x << "," << p[0].y << " " << p[1].x << "," << p[1].y << std::endl;
+    }
+};
+
+struct Polygon
+{
+    int _poligonIndex;
+    std::vector<edge2dNice> _edges;
+
+    bool pointInPolygon(float x, float y) const
+    {
+        bool retVal = false;
+        for (auto& e : _edges)
         {
-            if (a.x < b.x)
-                return true;
-
-            return (a.x == b.x and a.y < b.y);
+            float carthesian = (e.p[1].x - e.p[0].x)*(y - e.p[0].y) - (e.p[1].y - e.p[0].y) * (x -e.p[0].x);
+            bool inside = (carthesian != e.directionOfFace);
+            std::cout << ( inside ? "I " : "O ") << x << "," << y << std::endl;
+            retVal |= inside;
         }
-    };
+        return retVal;
+    }
+};
 
+class PolygonMaster
+{
+private:
+    unsigned int _amountOfEdges;
+    int _projectedPlaneIndex;
+    float _planeCoordinate;
+    std::vector<int> _indexes;
+    Eigen::Matrix<float, 1, Eigen::Dynamic>  _determinants;
+    Eigen::Matrix<float, 3, Eigen::Dynamic> _ia;
+    Eigen::Matrix<float, 3, Eigen::Dynamic> _ib;
+    Eigen::Matrix<float, 3, Eigen::Dynamic> _ia_b;
+    Eigen::Matrix<float, 3, Eigen::Dynamic> _na;
+    Eigen::Matrix<float, 3, Eigen::Dynamic> _nb;
+    Eigen::RowVector3f _p01xp02;
+    Eigen::Matrix3f _plane;
+    std::map<int, edge2d> _2dEdges;
+    std::vector<edge2dNice> _2dedgesNice;
 
-    struct edge2d {
-        std::set<point2d, PointCmp> p;
-        point2d nc;
-    };
-
-    struct edge2dNice {
-        point2d p[2];
-        float directionOfFace;
-
-        void print() const {
-            std::cout << std::setprecision(12) << directionOfFace << " " << p[0].x << "," << p[0].y << " " << p[1].x << "," << p[1].y << std::endl;
-        }
-    };
-
-    struct Polygon {
-        int _poligonIndex;
-        std::vector<edge2dNice> _edges;
-
-        bool pointInPolygon(float x, float y) const
+    static const int dimMapX[3];
+    static const int dimMapY[3];
+public:
+    PolygonMaster(unsigned int amountOfEdges,
+                  int projectedPlaneIndex,
+                  float planeCoordinate) :
+        _amountOfEdges(amountOfEdges),
+        _projectedPlaneIndex(projectedPlaneIndex),
+        _planeCoordinate(planeCoordinate),
+        _indexes(amountOfEdges),
+        _determinants(amountOfEdges),
+        _ia(3, amountOfEdges),
+        _ib(3, amountOfEdges), _ia_b(3, amountOfEdges),
+        _na(3, amountOfEdges), _nb(3, amountOfEdges),
+        _p01xp02()
+    {
+        float p = planeCoordinate;
+        switch(projectedPlaneIndex)
         {
-            bool retVal = false;
-            for (auto& e : _edges)
-            {
-                float carthesian = (e.p[1].x - e.p[0].x)*(y - e.p[0].y) - (e.p[1].y - e.p[0].y) * (x -e.p[0].x);
-                bool inside = (carthesian != e.directionOfFace);
-                std::cout << ( inside ? "I " : "O ") << x << "," << y << std::endl;
-                retVal |= inside;
-            }
-            return retVal;
+        case 0: // X
+            _plane <<   p,   p,   p,
+                   0.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0;
+            break;
+        case 1: // y
+            _plane << 0.0, 1.0, 0.0,
+                   p,   p,   p,
+                   0.0, 0.0, 1.0;
+            break;
+        case 2: //z
+            _plane << 0.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0,
+                   p,   p,   p;
+            break;
+        default:
+            break;
         }
+    }
+
+    void fillMatrixes(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
+    {
+        unsigned int columnNumber = 0;
+        const trim::TriangleModel::ModelMatrix &mm = tm.getVerticleMatrix();
+        const trim::TriangleModel::ModelMatrix &nm = tm.getNormalMatrix();
+        for (auto& edge: edges)
+        {
+            _indexes[columnNumber] = edge.index_;
+            for (int i = 0; i < 3; ++i)
+            {
+                _ia(i, columnNumber) = mm(edge._e[0], i);
+                _ib(i, columnNumber) = mm(edge._e[1], i);
+                _na(i, columnNumber) = nm(edge._n[0], i);
+                _nb(i, columnNumber) = nm(edge._n[1], i);
+            }
+            ++columnNumber;
+        }
+        _ia_b = _ib - _ia;
+        Eigen::Vector3f p01 = _plane.col(1) - _plane.col(0);
+        Eigen::Vector3f p02 = _plane.col(2) - _plane.col(0);
+
+        _p01xp02 = p01.cross(p02);
+        _determinants = _p01xp02 * (_ia_b * -1.0);
+    }
+
+    void add2Edge(const Eigen::Vector3f &point,
+                  const Eigen::Vector3f &normal, int edgeId)
+    {
+        if (_2dEdges.find(edgeId) == _2dEdges.end())
+            _2dEdges.insert(std::pair<int, edge2d>(edgeId, edge2d()));
+
+        edge2d& edge = _2dEdges[edgeId];
+        if (edge.p.size() == 0)
+        {
+            edge.nc.x = normal(dimMapX[_projectedPlaneIndex]);
+            edge.nc.y = normal(dimMapY[_projectedPlaneIndex]);
+        }
+        point2d p;
+        p.x = point(dimMapX[_projectedPlaneIndex]);
+        p.y = point(dimMapY[_projectedPlaneIndex]);
+        edge.p.insert(p);
+    }
+
+    void calculate2dEdges()
+    {
+        for (unsigned int colIndex = 0; colIndex < _amountOfEdges; ++colIndex)
+        {
+            float det = _determinants(0, colIndex);
+            if (det != 0.0) // shall never be in our case as we prefilter...
+            {
+                float t = _p01xp02 * (_ia.col(colIndex) - _plane.col(0));
+                t/=det;
+                Eigen::Vector3f point = _ia.col(colIndex) + (_ia_b.col(colIndex)*t);
+                Eigen::Vector3f normal = _na.col(colIndex);
+                int edgeId = _indexes[colIndex];
+                add2Edge(point, normal, edgeId);
+            }
+        }
+    }
+
+    void convertEdges2NicerForm()
+    {
+        for (auto& edge : _2dEdges)
+        {
+            edge2dNice en;
+            unsigned int i = 0;
+            // add the points in order x < y.
+            for (auto& pnts : edge.second.p)
+            {
+                en.p[i] = pnts;
+                ++i;
+            }
+            //Calculate a direction :-)
+            //float carthesian = (en.p[1].x - en.p[0].x)*(edge.second.nc.y - en.p[0].y) - (en.p[1].y - en.p[0].y) * (edge.second.nc.x -en.p[0].x);
+            // Use this formula here as the normals seem to be 0 centered.
+            float carthesian = (en.p[1].x - en.p[0].x)*edge.second.nc.y - (en.p[1].y - en.p[0].y) * edge.second.nc.x;
+            en.directionOfFace =  carthesian > 0 ? 1.0 :
+                                  (carthesian == 0 ? 0.0 : -1.0);
+            _2dedgesNice.push_back(en);
+        }
+    }
+
+    void projectEdges(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
+    {
+        fillMatrixes(edges, tm);
+        calculate2dEdges();
+        convertEdges2NicerForm();
+    }
+
+
+    std::map<point2d, int, PointCmp> initialisePointMap()
+    {
+        std::map<point2d, int, PointCmp> point2poligon;
+        for (auto& edge : _2dedgesNice)
+        {
+            point2poligon.insert(std::pair<point2d, int>(edge.p[0], -1));
+            point2poligon.insert(std::pair<point2d, int>(edge.p[1], -1));
+        }
+        return point2poligon;
+    }
+
+    void precalcPointsToPoligins(std::map<point2d, int, PointCmp> &point2poligon)
+    {
+        unsigned int pIndex = 0;
+        for (auto& edge : _2dedgesNice)
+        {
+            int p1 = point2poligon[edge.p[0]];
+            int p2 = point2poligon[edge.p[1]];
+            int pMax = std::max(p1, p2);
+            if (pMax >=0)
+            {
+                point2poligon[edge.p[0]] = pMax;
+                point2poligon[edge.p[1]] = pMax;
+            }
+            else
+            {
+                point2poligon[edge.p[0]] = pIndex;
+                point2poligon[edge.p[1]] = pIndex;
+                pIndex++;
+            }
+        }
+    }
+
+    std::map<int, Polygon> clusterPointsToFinalPoligons(std::map<point2d, int, PointCmp> &point2poligon)
+    {
+        std::map<int, Polygon> poligons;
+        bool mergeDone = true;
+        while(mergeDone)
+        {
+            mergeDone = false;
+            for (auto& edge : _2dedgesNice)
+            {
+                int pi1 = point2poligon[edge.p[0]];
+                int pi2 = point2poligon[edge.p[1]];
+                if (pi1 != pi2)
+                {
+                    mergeDone = true;
+                    int pMax = std::max(pi1, pi2);
+                    point2poligon[edge.p[0]] = pMax;
+                    point2poligon[edge.p[1]] = pMax;
+                }
+            }
+        }
+
+        for (auto& edge : _2dedgesNice)
+        {
+            int key = point2poligon[edge.p[0]];
+            poligons[key]._edges.push_back(edge);
+        }
+
+        return poligons;
+    }
+
+    void debugPolygons(const std::map<int, Polygon> &poligons) const
+    {
+        for (auto &poly : poligons)
+        {
+            std::cout << "Polygon: " << poly.first << " <> " << _projectedPlaneIndex << std::endl;
+            std::cout << "------------------------------------------------" << std::endl;
+            for (auto& pnts : poly.second._edges)
+                pnts.print();
+        }
+    }
+
+    std::map<int, Polygon> calculatePolygons()
+    {
+        std::map<point2d, int, PointCmp> &&point2poligon = initialisePointMap();
+        precalcPointsToPoligins(point2poligon);
+        std::map<int, Polygon> &&poligons = clusterPointsToFinalPoligons(point2poligon);
+        debugPolygons(poligons);
+        return std::move(poligons);
+    }
+
+    std::map<int, Polygon> getPolygons(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
+    {
+        projectEdges(edges, tm);
+        return std::move(calculatePolygons());
+    }
+
+    bool checkPointInPoligon(const Eigen::RowVector3f& point, const Polygon &poly) const
+    {
+        float x = point(dimMapX[_projectedPlaneIndex]);
+        float y = point(dimMapY[_projectedPlaneIndex]);
+        return poly.pointInPolygon(x, y);
+    }
+}; // end of PolygonMaster
+
+const int PolygonMaster::dimMapX[3] = {1, 0, 0};
+const int PolygonMaster::dimMapY[3] = {2, 2, 1};
+
+class CheckPointImpl
+{
+private:
+    typedef std::list<edge3d> EdgeList;
+    std::vector<EdgeList> _edges;
+
+    void checkIfEdgeCrossesPlane(const float pointXYZCoord,
+                                 const int dimIndex,
+                                 const trim::TriangleData& triangle,
+                                 const trim::TriangleData& normals,
+                                 const int triangleIndex,
+                                 int triangleVertex1Index, int triangleVertex2Index)
+    {
+        float pointXYZMin = std::min(triangle(triangleVertex1Index, dimIndex),
+                                     triangle(triangleVertex2Index, dimIndex));
+        float pointXYZMax= std::max(triangle(triangleVertex1Index, dimIndex),
+                                    triangle(triangleVertex2Index, dimIndex));
+
+        if ( pointXYZMin <= pointXYZCoord and pointXYZCoord <= pointXYZMax)
+        {
+            _edges[dimIndex].push_back({triangle(triangleVertex1Index),
+                                        triangle(triangleVertex2Index),
+                                        normals(triangleVertex1Index),
+                                        normals(triangleVertex2Index),
+                                        triangleIndex});
+        }
+    }
+
+    void filterTriangleFacesByProjectionPlane(const Eigen::RowVector3f& point,
+            const int dimIndex,
+            const trim::TriangleModel& tm)
+    {
+        const std::vector<trim::TriangleData> &verticles = tm.getTriangles();
+        const std::vector<trim::TriangleData> &normals = tm.getTriangleNormals();
+
+        for (unsigned int triangleIndex = 0; triangleIndex < verticles.size(); ++triangleIndex)
+        {
+            const trim::TriangleData& triangle = verticles[triangleIndex];
+            const trim::TriangleData& normal = normals[triangleIndex];
+
+            checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 1);
+            checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 2);
+            checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 1, 2);
+        }
+    }
+
+    bool isPointIn2dProjection(const Eigen::RowVector3f& point,
+                               int dimensionIndex,
+                               const trim::TriangleModel& tm) const
+    {
+        unsigned int numberOfEdges = _edges[dimensionIndex].size();
+        bool retVal = false;
+        if (numberOfEdges > 0)
+        {
+            PolygonMaster p(_edges[dimensionIndex].size(), dimensionIndex, point(dimensionIndex));
+            std::map<int, Polygon>  &&poligons = p.getPolygons(_edges[dimensionIndex], tm);
+            for (auto& poly : poligons)
+            {
+                retVal |= p.checkPointInPoligon(point, poly.second);
+            }
+        }
+        return retVal;
+    }
+
+public:
+
+    CheckPointImpl() : _edges(3)
+    {
     };
 
-    class PolygonMaster {
-        private:
-            unsigned int _amountOfEdges;
-            int _projectedPlaneIndex;
-            float _planeCoordinate;
-            std::vector<int> _indexes;            
-            Eigen::Matrix<float, 1, Eigen::Dynamic>  _determinants;
-            Eigen::Matrix<float, 3, Eigen::Dynamic> _ia;
-            Eigen::Matrix<float, 3, Eigen::Dynamic> _ib;
-            Eigen::Matrix<float, 3, Eigen::Dynamic> _ia_b;
-            Eigen::Matrix<float, 3, Eigen::Dynamic> _na;
-            Eigen::Matrix<float, 3, Eigen::Dynamic> _nb;
-            Eigen::RowVector3f _p01xp02;
-            Eigen::Matrix3f _plane;
-            std::map<int, edge2d> _2dEdges;
-            std::vector<edge2dNice> _2dedgesNice;
+    bool isInModel(const trim::TriangleModel& tm,
+                   const Eigen::RowVector3f& point)
+    {
+        for (int i = 0; i < 3; ++i)
+            filterTriangleFacesByProjectionPlane(point, i, tm);
 
-            static const int dimMapX[3];
-            static const int dimMapY[3];
-        public:
-            PolygonMaster(unsigned int amountOfEdges,
-                         int projectedPlaneIndex,
-                         float planeCoordinate) : 
-                _amountOfEdges(amountOfEdges), 
-                _projectedPlaneIndex(projectedPlaneIndex),
-                _planeCoordinate(planeCoordinate),
-                _indexes(amountOfEdges),
-                _determinants(amountOfEdges),
-                _ia(3, amountOfEdges),
-                _ib(3, amountOfEdges), _ia_b(3, amountOfEdges),
-                _na(3, amountOfEdges), _nb(3, amountOfEdges),
-                _p01xp02()
-            {
-                float p = planeCoordinate;
-                switch(projectedPlaneIndex)
-                {
-                    case 0: // X
-                        _plane <<   p,   p,   p,
-                                  0.0, 1.0, 0.0,
-                                  0.0, 0.0, 1.0;
-                        break;
-                    case 1: // y
-                        _plane << 0.0, 1.0, 0.0,
-                                    p,   p,   p,
-                                  0.0, 0.0, 1.0; 
-                        break;
-                    case 2: //z
-                        _plane << 0.0, 1.0, 0.0,
-                                  0.0, 0.0, 1.0,
-                                    p,   p,   p;
-                        break;
-                    default:
-                        break;
-                }
-            }
+        bool ret = false;
+        for (int i = 0; i < 3; ++i)
+            ret ^= isPointIn2dProjection(point, i, tm);
 
-            void fillMatrixes(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
-            {
-                unsigned int columnNumber = 0;
-                const trim::TriangleModel::ModelMatrix &mm = tm.getVerticleMatrix();
-                const trim::TriangleModel::ModelMatrix &nm = tm.getNormalMatrix();
-                for (auto& edge: edges)
-                {
-                    _indexes[columnNumber] = edge.index_;
-                    for (int i = 0; i < 3; ++i)
-                    {
-                        _ia(i, columnNumber) = mm(edge._e[0], i);
-                        _ib(i, columnNumber) = mm(edge._e[1], i);
-                        _na(i, columnNumber) = nm(edge._n[0], i);
-                        _nb(i, columnNumber) = nm(edge._n[1], i);
-                    }
-                    ++columnNumber;
-                }
-                _ia_b = _ib - _ia;
-                Eigen::Vector3f p01 = _plane.col(1) - _plane.col(0);
-                Eigen::Vector3f p02 = _plane.col(2) - _plane.col(0);
+        std::cout << "Point: " << point << " is " <<  (ret ? "inside" : "outside") << std::endl;
+        return ret;
+    }
+};
 
-                _p01xp02 = p01.cross(p02);
-                _determinants = _p01xp02 * (_ia_b * -1.0);
-            }
-
-            void add2Edge(const Eigen::Vector3f &point, 
-                          const Eigen::Vector3f &normal, int edgeId)
-            {
-                if (_2dEdges.find(edgeId) == _2dEdges.end())
-                    _2dEdges.insert(std::pair<int, edge2d>(edgeId, edge2d()));
-
-                edge2d& edge = _2dEdges[edgeId];
-                if (edge.p.size() == 0)
-                {
-                    edge.nc.x = normal(dimMapX[_projectedPlaneIndex]);
-                    edge.nc.y = normal(dimMapY[_projectedPlaneIndex]);
-                }
-                point2d p;
-                p.x = point(dimMapX[_projectedPlaneIndex]);
-                p.y = point(dimMapY[_projectedPlaneIndex]);
-                edge.p.insert(p);
-            }
-
-            void calculate2dEdges()
-            {
-                for (unsigned int colIndex = 0; colIndex < _amountOfEdges; ++colIndex)
-                {
-                    float det = _determinants(0, colIndex);
-                    if (det != 0.0) // shall never be in our case as we prefilter...
-                    {
-                        float t = _p01xp02 * (_ia.col(colIndex) - _plane.col(0));
-                        t/=det;
-                        Eigen::Vector3f point = _ia.col(colIndex) + (_ia_b.col(colIndex)*t);
-                        Eigen::Vector3f normal = _na.col(colIndex);
-                        int edgeId = _indexes[colIndex];
-                        add2Edge(point, normal, edgeId);
-                    }
-                }
-            }
-
-            void convertEdges2NicerForm() {
-                for (auto& edge : _2dEdges)
-                {
-                    edge2dNice en;
-                    unsigned int i = 0;
-                    // add the points in order x < y.
-                    for (auto& pnts : edge.second.p)
-                    {
-                        en.p[i] = pnts;
-                        ++i;
-                    }
-                    //Calculate a direction :-)
-                    //float carthesian = (en.p[1].x - en.p[0].x)*(edge.second.nc.y - en.p[0].y) - (en.p[1].y - en.p[0].y) * (edge.second.nc.x -en.p[0].x);
-                    // Use this formula here as the normals seem to be 0 centered.
-                    float carthesian = (en.p[1].x - en.p[0].x)*edge.second.nc.y - (en.p[1].y - en.p[0].y) * edge.second.nc.x;
-                    en.directionOfFace =  carthesian > 0 ? 1.0 :
-                                                           (carthesian == 0 ? 0.0 : -1.0);
-                    _2dedgesNice.push_back(en);
-                }
-            }
-
-            void projectEdges(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
-            {
-                fillMatrixes(edges, tm);
-                calculate2dEdges();
-                convertEdges2NicerForm();
-            }
-
-
-            std::map<point2d, int, PointCmp> initialisePointMap()
-            {
-                std::map<point2d, int, PointCmp> point2poligon;
-                for (auto& edge : _2dedgesNice)
-                {
-                    point2poligon.insert(std::pair<point2d, int>(edge.p[0], -1));
-                    point2poligon.insert(std::pair<point2d, int>(edge.p[1], -1));
-                }
-                return point2poligon;
-            }
-
-            void precalcPointsToPoligins(std::map<point2d, int, PointCmp> &point2poligon)
-            {
-                unsigned int pIndex = 0;
-                for (auto& edge : _2dedgesNice)
-                {   
-                    int p1 = point2poligon[edge.p[0]];
-                    int p2 = point2poligon[edge.p[1]];
-                    int pMax = std::max(p1, p2);
-                    if (pMax >=0)
-                    {
-                        point2poligon[edge.p[0]] = pMax;
-                        point2poligon[edge.p[1]] = pMax;
-                    }
-                    else
-                    {
-                        point2poligon[edge.p[0]] = pIndex;
-                        point2poligon[edge.p[1]] = pIndex;
-                        pIndex++;
-                    }
-                }
-            }
-
-            std::map<int, Polygon> clusterPointsToFinalPoligons(std::map<point2d, int, PointCmp> &point2poligon)
-            {
-                std::map<int, Polygon> poligons;
-                bool mergeDone = true;
-                while(mergeDone)
-                {
-                    mergeDone = false;
-                    for (auto& edge : _2dedgesNice)
-                    {
-                        int pi1 = point2poligon[edge.p[0]];
-                        int pi2 = point2poligon[edge.p[1]];
-                        if (pi1 != pi2)
-                        {
-                            mergeDone = true;
-                            int pMax = std::max(pi1, pi2);
-                            point2poligon[edge.p[0]] = pMax;
-                            point2poligon[edge.p[1]] = pMax;
-                        }
-                    }
-                }
-
-                for (auto& edge : _2dedgesNice)
-                {
-                    int key = point2poligon[edge.p[0]];
-                    poligons[key]._edges.push_back(edge);
-                }
-
-                return poligons;
-            }
-
-            void debugPolygons(const std::map<int, Polygon> &poligons) const {
-                for (auto &poly : poligons)
-                {
-                    std::cout << "Polygon: " << poly.first << " <> " << _projectedPlaneIndex << std::endl;
-                    std::cout << "------------------------------------------------" << std::endl;
-                    for (auto& pnts : poly.second._edges)
-                        pnts.print();
-                }
-            }
-
-            std::map<int, Polygon> calculatePolygons() {
-                std::map<point2d, int, PointCmp> &&point2poligon = initialisePointMap();
-                precalcPointsToPoligins(point2poligon);
-                std::map<int, Polygon> &&poligons = clusterPointsToFinalPoligons(point2poligon);
-                debugPolygons(poligons);
-                return std::move(poligons);
-            }
-
-            std::map<int, Polygon> getPolygons(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
-            {
-                projectEdges(edges, tm);
-                return std::move(calculatePolygons());
-            }
-
-            bool checkPointInPoligon(const Eigen::RowVector3f& point, const Polygon &poly) const
-            {
-                float x = point(dimMapX[_projectedPlaneIndex]);
-                float y = point(dimMapY[_projectedPlaneIndex]);
-                return poly.pointInPolygon(x, y);
-            }
-    }; // end of PolygonMaster
-
-    const int PolygonMaster::dimMapX[3] = {1, 0, 0};
-    const int PolygonMaster::dimMapY[3] = {2, 2, 1};
-
-    class CheckPointImpl {
-        private:
-            typedef std::list<edge3d> EdgeList;
-            std::vector<EdgeList> _edges;
-
-            void checkIfEdgeCrossesPlane(const float pointXYZCoord, 
-                                         const int dimIndex,
-                                         const trim::TriangleData& triangle,
-                                         const trim::TriangleData& normals,
-                                         const int triangleIndex,
-                                         int triangleVertex1Index, int triangleVertex2Index)
-            {
-                float pointXYZMin = std::min(triangle(triangleVertex1Index, dimIndex),
-                                             triangle(triangleVertex2Index, dimIndex));
-                float pointXYZMax= std::max(triangle(triangleVertex1Index, dimIndex),
-                                            triangle(triangleVertex2Index, dimIndex));
-
-                if ( pointXYZMin <= pointXYZCoord and pointXYZCoord <= pointXYZMax)
-                {
-                    _edges[dimIndex].push_back({triangle(triangleVertex1Index),
-                                                triangle(triangleVertex2Index), 
-                                                normals(triangleVertex1Index),
-                                                normals(triangleVertex2Index),
-                                                triangleIndex});
-                }
-            }
-                                     
-            void filterTriangleFacesByProjectionPlane(const Eigen::RowVector3f& point,
-                                    const int dimIndex,
-                                    const trim::TriangleModel& tm)
-            {
-                const std::vector<trim::TriangleData> &verticles = tm.getTriangles();
-                const std::vector<trim::TriangleData> &normals = tm.getTriangleNormals();
-
-                for (unsigned int triangleIndex = 0; triangleIndex < verticles.size(); ++triangleIndex) {
-                    const trim::TriangleData& triangle = verticles[triangleIndex];
-                    const trim::TriangleData& normal = normals[triangleIndex];
-                    
-                    checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 1);
-                    checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 0, 2);
-                    checkIfEdgeCrossesPlane(point(dimIndex), dimIndex, triangle, normal, triangleIndex, 1, 2);
-                }
-            }
-
-            bool isPointIn2dProjection(const Eigen::RowVector3f& point,
-                                       int dimensionIndex,
-                                       const trim::TriangleModel& tm) const
-            {
-                unsigned int numberOfEdges = _edges[dimensionIndex].size();
-                bool retVal = false;
-                if (numberOfEdges > 0)
-                {
-                    PolygonMaster p(_edges[dimensionIndex].size(), dimensionIndex, point(dimensionIndex));
-                    std::map<int, Polygon>  &&poligons = p.getPolygons(_edges[dimensionIndex], tm);
-                    for (auto& poly : poligons)
-                    {
-                        retVal |= p.checkPointInPoligon(point, poly.second);
-                    }
-                }
-                return retVal;
-            }
-
-        public:
-
-            CheckPointImpl() : _edges(3) {
-            };
-
-            bool isInModel(const trim::TriangleModel& tm,
-                           const Eigen::RowVector3f& point)
-            {
-                for (int i = 0; i < 3; ++i)
-                    filterTriangleFacesByProjectionPlane(point, i, tm);
-
-                bool ret = false;
-                for (int i = 0; i < 3; ++i)
-                    ret ^= isPointIn2dProjection(point, i, tm);
-
-                std::cout << "Point: " << point << " is " <<  (ret ? "inside" : "outside") << std::endl;
-                return ret;
-            }
-    };
-
-CheckPoint::CheckPoint() : _impl(std::make_shared<CheckPointImpl>()) 
+CheckPoint::CheckPoint() : _impl(std::make_shared<CheckPointImpl>())
 {
 
 }

@@ -4,18 +4,21 @@
 
 #include <string>
 
-namespace exception {
+namespace exception
+{
 
-    class GenericException {
-        private:
-            std::string _s;
-        public:
-            GenericException(const std::string& s) : _s(s) {};
-            operator const std::string&() {
-                return _s;
-            }
+class GenericException
+{
+private:
+    std::string _s;
+public:
+    GenericException(const std::string& s) : _s(s) {};
+    operator const std::string&()
+    {
+        return _s;
+    }
 
-    };
+};
 }
 
-#endif 
+#endif

@@ -4,22 +4,24 @@
 
 #include <string>
 
-namespace trim {
-    class TriangleModel;
+namespace trim
+{
+class TriangleModel;
 }
 
-namespace mc {
+namespace mc
+{
 
-    class ModelConverter
-    {
-    private:
-        std::string conversionParameters_;
-    public:
-        ModelConverter(const std::string& conversionParameters);
-        void convert(trim::TriangleModel &tm);
-        ~ModelConverter();
-    };
-        
+class ModelConverter
+{
+private:
+    std::string conversionParameters_;
+public:
+    ModelConverter(const std::string& conversionParameters);
+    void convert(trim::TriangleModel &tm);
+    ~ModelConverter();
+};
+
 }
 
 #endif

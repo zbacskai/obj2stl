@@ -3,6 +3,7 @@ SRC_DIR:=./src
 CXXFLAGS:= -g -std=c++11 -pedantic -Wall -Wextra -Werror
 CPPFLAGS:= -I include
 SOURCES:= $(wildcard ./src/*.cpp)
+HEADERS:= $(wildcard ./include/*.hpp)
 OBJS:= $(patsubst %.cpp, %.o, $(SOURCES))
 LDFLAGS:=-lboost_program_options
 
@@ -16,6 +17,9 @@ all: $(APP)
 
 check:
 	cppclean --verbose .
+
+style:
+	astyle --style=allman $(SOURCES) $(HEADERS)
 
 clean:
 	rm -rf src/*.o

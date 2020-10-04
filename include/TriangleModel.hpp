@@ -7,25 +7,27 @@
 #include <algorithm>
 #include <eigen3/Eigen/Dense>
 
-namespace trim {
+namespace trim
+{
 
 typedef int32_t VertexRef;
 typedef uint16_t MatrixSelector;
 
-class TriangleData {
-    private:
-        VertexRef _vertex[3];
-        uint16_t _matrixSelector;
-        uint16_t _reserved;
-    public: 
-        TriangleData(VertexRef a, VertexRef b,
+class TriangleData
+{
+private:
+    VertexRef _vertex[3];
+    uint16_t _matrixSelector;
+    uint16_t _reserved;
+public:
+    TriangleData(VertexRef a, VertexRef b,
                  VertexRef c);
 
-        friend class TriangleModel;
+    friend class TriangleModel;
 
-        VertexRef operator()(int index) const;
+    VertexRef operator()(int index) const;
 
-        float operator()(int vertexIndex, int coordinate) const;
+    float operator()(int vertexIndex, int coordinate) const;
 };
 
 class TriangleModel
@@ -48,8 +50,8 @@ private:
 public:
     TriangleModel();
     void addTriangle(const TriangleData &verticles,
-                    const TriangleData& triangleTexture = TriangleData(0, 0, 0),
-                    const TriangleData& triangleNormals = TriangleData(0, 0, 0));
+                     const TriangleData& triangleTexture = TriangleData(0, 0, 0),
+                     const TriangleData& triangleNormals = TriangleData(0, 0, 0));
     const std::vector<TriangleData>& getTriangles() const;
     const std::vector<TriangleData>& getTriangleTextures() const;
     const std::vector<TriangleData>& getTriangleNormals() const;
