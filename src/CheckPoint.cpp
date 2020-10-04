@@ -191,7 +191,9 @@ namespace chp {
                         ++i;
                     }
                     //Calculate a direction :-)
-                    float carthesian = (en.p[1].x - en.p[0].x)*(edge.second.nc.y - en.p[0].y) - (en.p[1].y - en.p[0].y) * (edge.second.nc.x -en.p[0].x);
+                    //float carthesian = (en.p[1].x - en.p[0].x)*(edge.second.nc.y - en.p[0].y) - (en.p[1].y - en.p[0].y) * (edge.second.nc.x -en.p[0].x);
+                    // Use this formula here as the normals seem to be 0 centered.
+                    float carthesian = (en.p[1].x - en.p[0].x)*edge.second.nc.y - (en.p[1].y - en.p[0].y) * edge.second.nc.x;
                     en.directionOfFace =  carthesian > 0 ? 1.0 :
                                                            (carthesian == 0 ? 0.0 : -1.0);
                     _2dedgesNice.push_back(en);
