@@ -4,7 +4,7 @@
 #include <iostream>
 
 namespace logging {
-    std::string getCurrentTimestamp();
+std::string getCurrentTimestamp();
 }
 
 #define log(...)\
@@ -13,9 +13,9 @@ namespace logging {
 }
 
 #ifdef LOG_DEBUG
-    #define debug(...) log(__VA_ARGS__)
+#define debug(...) log(__VA_ARGS__)
 #else
-    #define debug(...) {}
+#define debug(...) {}
 #endif
 
 #endif
