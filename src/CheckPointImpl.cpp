@@ -215,17 +215,17 @@ void PolygonMaster::debugPolygons(const std::map<int, Polygon> &poligons) const
 
 std::map<int, Polygon> PolygonMaster::calculatePolygons()
 {
-    std::map<point2d, int, PointCmp> &&point2poligon = initialisePointMap();
+    std::map<point2d, int, PointCmp> point2poligon = std::move(initialisePointMap());
     precalcPointsToPoligins(point2poligon);
-    std::map<int, Polygon> &&poligons = clusterPointsToFinalPoligons(point2poligon);
+    std::map<int, Polygon> poligons = std::move(clusterPointsToFinalPoligons(point2poligon));
     debugPolygons(poligons);
-    return std::move(poligons);
+    return poligons;
 }
 
 std::map<int, Polygon> PolygonMaster::getPolygons(const std::list<edge3d> &edges, const trim::TriangleModel& tm)
 {
     projectEdges(edges, tm);
-    return std::move(calculatePolygons());
+    return calculatePolygons();
 }
 
 bool PolygonMaster::checkPointInPoligon(const Eigen::RowVector3f& point, const Polygon &poly) const
@@ -285,7 +285,7 @@ bool CheckPointImpl::isPointIn2dProjection(const Eigen::RowVector3f& point,
     bool retVal = false;
     if (numberOfEdges > 0) {
         PolygonMaster p(_edges[dimensionIndex].size(), dimensionIndex, point(dimensionIndex));
-        std::map<int, Polygon>  &&poligons = p.getPolygons(_edges[dimensionIndex], tm);
+        std::map<int, Polygon>  poligons = std::move(p.getPolygons(_edges[dimensionIndex], tm));
         for (auto& poly : poligons) {
             retVal |= p.checkPointInPoligon(point, poly.second);
         }
