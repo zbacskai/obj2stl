@@ -8,7 +8,7 @@
 
 namespace chp {
 
-bool PointCmp::operator ()(const point2d &a, const point2d &b)
+bool PointCmp::operator ()(const point2d &a, const point2d &b) const
 {
     if (a.x < b.x)
         return true;
@@ -45,7 +45,7 @@ PolygonMaster::PolygonMaster(
     _na(3, amountOfEdges), _nb(3, amountOfEdges),
     _p01xp02()
 {
-    float p = planeCoordinate;
+    float p = _planeCoordinate;
     switch(projectedPlaneIndex) {
     case 0: // X
         _plane <<   p,   p,   p,
@@ -215,9 +215,9 @@ void PolygonMaster::debugPolygons(const std::map<int, Polygon> &poligons) const
 
 std::map<int, Polygon> PolygonMaster::calculatePolygons()
 {
-    std::map<point2d, int, PointCmp> point2poligon = std::move(initialisePointMap());
+    std::map<point2d, int, PointCmp> point2poligon = initialisePointMap();
     precalcPointsToPoligins(point2poligon);
-    std::map<int, Polygon> poligons = std::move(clusterPointsToFinalPoligons(point2poligon));
+    std::map<int, Polygon> poligons = clusterPointsToFinalPoligons(point2poligon);
     debugPolygons(poligons);
     return poligons;
 }
@@ -252,10 +252,10 @@ void CheckPointImpl::checkIfEdgeCrossesPlane(const float pointXYZCoord,
                                 triangle(triangleVertex2Index, dimIndex));
 
     if ( pointXYZMin <= pointXYZCoord and pointXYZCoord <= pointXYZMax) {
-        _edges[dimIndex].push_back({triangle(triangleVertex1Index),
-                                    triangle(triangleVertex2Index),
-                                    normals(triangleVertex1Index),
-                                    normals(triangleVertex2Index),
+        _edges[dimIndex].push_back({{triangle(triangleVertex1Index),
+                                     triangle(triangleVertex2Index)},
+                                    {normals(triangleVertex1Index),
+                                     normals(triangleVertex2Index)},
                                     triangleIndex});
     }
 }
@@ -285,7 +285,7 @@ bool CheckPointImpl::isPointIn2dProjection(const Eigen::RowVector3f& point,
     bool retVal = false;
     if (numberOfEdges > 0) {
         PolygonMaster p(_edges[dimensionIndex].size(), dimensionIndex, point(dimensionIndex));
-        std::map<int, Polygon>  poligons = std::move(p.getPolygons(_edges[dimensionIndex], tm));
+        std::map<int, Polygon>  poligons = p.getPolygons(_edges[dimensionIndex], tm);
         for (auto& poly : poligons) {
             retVal |= p.checkPointInPoligon(point, poly.second);
         }

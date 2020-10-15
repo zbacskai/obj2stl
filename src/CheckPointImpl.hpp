@@ -30,7 +30,7 @@ struct point2d {
 };
 
 struct PointCmp {
-    bool operator ()(const point2d &a, const point2d &b);
+    bool operator ()(const point2d &a, const point2d &b) const;
 };
 
 

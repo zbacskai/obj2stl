@@ -10,7 +10,15 @@
 #include <iomanip>
 #include <cstring>
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <machine/endian.h>
+
+#include <libkern/OSByteOrder.h>
+#define htole32(x) OSSwapHostToLittleInt32(x)
+
+#else
 #include <endian.h>
+#endif
 
 namespace {
 #pragma pack(push, 1)

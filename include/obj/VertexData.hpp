@@ -1,5 +1,5 @@
 #ifndef VertexData_hpp
-#define vertexData_hpp
+#define VertexData_hpp
 /**
   *
   * Copyright 2020 Zoltan Bacskai
